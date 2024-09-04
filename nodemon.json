@@ -1,0 +1,8 @@
+{
+    "ignore": [
+        ".git",
+        "node_modules/**/node_modules"
+    ],
+    "watch": ["./src/**/*.*", "./example/**/*.*", "./*.*"],
+    "quiet": true
+}
