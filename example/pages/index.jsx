@@ -74,7 +74,7 @@ export default async ({ title }) => <html lang="ru">
                 {`const rendered = await JSXComp({ data: renderCount });\nconsole.log(rendered);`}
             </pre>
 
-            <p>Подробный пример с сохранением результат в файл <a href="">здесь</a></p>
+            <p>Подробный пример с сохранением результат в файл <a href="https://github.com/dergachevm/jtsx-loader/tree/master/example">здесь</a></p>
 
             <h3>Требования</h3>
             <p>Минимальная версия Node.js - 20.16.0</p>

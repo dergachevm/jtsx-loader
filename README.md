@@ -1,4 +1,5 @@
-* Documentation under development
+\* Documentation under development
+
 JavaScript TypeScript Xml — .jsx and .tsx file loader for Node.js
 
 Allows you to write JTSX code and compile it into native HTML
@@ -16,3 +17,5 @@ The loader allows you to extend the transformation of JTSX files through configu
 The loader also allows you to prevent caching when importing components, which makes it possible to comfortably use page reloading when changes are made and not restart the server that renders the component
 
 IMPORTANT: This project is NOT a replacement for React, Vue and their derivatives. If you need reactivity and thick clients, it is better to use the appropriate tools
+
+More info https://jtsx.ancros.dev
