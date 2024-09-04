@@ -38,6 +38,8 @@ export default async ({ data }) => {
             <p>The loader allows you to extend the transformation of JTSX files through configurations and self-written functions</p>
             <p>The loader also allows you to prevent caching when importing components, which makes it possible to comfortably use page reloading when changes are made and not restart the server that renders the component</p>
             <p>IMPORTANT: This project is NOT a replacement for React, Vue and their derivatives. If you need reactivity and thick clients, it is better to use the appropriate tools</p>
+
+            <p><a href="https://github.com/dergachevm/jtsx-loader">Github</a></p>
         </section>
 
         <section>

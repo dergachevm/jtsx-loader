@@ -1,6 +1,6 @@
 {
     "name": "jtsx-loader",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "main": "./loader/register.mjs",
     "type": "module",
     "imports": {
@@ -10,10 +10,17 @@
         "start": "node --import ./loader/register.mjs ./example/server.js",
         "dev": "nodemon --import ./loader/register.mjs ./example/server.js"
     },
-    "keywords": [],
+    "engines": {
+        "node": ">=20.16 <21"
+    },
+    "keywords": ["jsx", "tsx", "loader", "html", "static"],
     "author": "Dergachev Mihail <dergachev.mihail@gmail.com>",
     "license": "MIT",
     "description": "JSX and TSX loader that allows you to compile to static HTML",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dergachevm/jtsx-loader"
+    },
     "dependencies": {
         "esbuild": "^0.23.1"
     },
