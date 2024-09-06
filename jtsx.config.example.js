@@ -1,4 +1,10 @@
 export default {
+    // When true disables warnings when uses React camelCase attributes, like htmlFor instead of for xLinkHref instead of xlink:href
+    disableAttrWarnings: false,
+
+    // When true - rewrite react camelCase attributes into default HTML name style
+    rewriteReactAttrs: false,
+
     // Esbuild transform config https://esbuild.github.io/api/#transform
     esbuildTransformConfig: undefined,
 

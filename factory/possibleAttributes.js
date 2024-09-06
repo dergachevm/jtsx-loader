@@ -64,8 +64,6 @@ const possibleAttributes = {
     'high': 'high',
     'href': 'href',
     'hrefLang': 'hreflang',
-    'htmlFor': 'htmlfor',
-    'httpEquiv': 'httpequiv',
     'httpEquiv': 'http-equiv',
     'icon': 'icon',
     'id': 'id',

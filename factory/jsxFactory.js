@@ -55,7 +55,8 @@ const objectIntoAttrs = (object) => {
         }
 
         if (possibleAttributes[attr] && possibleAttributes[attr] !== attr) {
-            console.warn(`Warning! Replace "${attr}" with native html property "${possibleAttributes[attr]}"`);
+            (config.disableAttrWarnings !== true) && console.warn(`Warning! Replace "${attr}" with native html property "${possibleAttributes[attr]}"`);
+            if (config.rewriteReactAttrs === true) attr = possibleAttributes[attr];
         }
 
         if (attr === 'style' && typeof value === 'object') {
