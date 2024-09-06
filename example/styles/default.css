@@ -229,3 +229,24 @@ main {
     border-bottom: none;
     border-radius: 8px;
 }
+
+@media screen and (max-width: 768px) {
+    body {
+        padding: 20px;
+    }
+
+    main {
+        /* overflow-x: hidden; */
+    }
+
+    pre {
+        display: block;
+        overflow-x: auto;
+        max-width: 90vw;
+        padding: 20px;
+    }
+
+    h5 {
+        margin-top: 20px;
+    }
+}

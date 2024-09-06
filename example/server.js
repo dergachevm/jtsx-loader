@@ -58,6 +58,7 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:page', async (req, res) => {
+    if (req.params.page.includes('.')) return res.status(404);
     renderCount++;
     return res.send(await render(req.params.page));
 });
