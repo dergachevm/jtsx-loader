@@ -167,13 +167,13 @@ export default async ({ title }) => <html lang="en">
         <section>
             <h2>Authors</h2>
             <p><a href="mailto:dergachev.mihail@gmail.com">Dergachev Mikhail</a></p>
-            <p><a href="https: //ancros.dev">https://ancros.dev</a></p>
+            <p><a href="https://ancros.dev">https://ancros.dev</a></p>
         </section>
 
         <section>
             <h2>References</h2>
-            <p><a href="https://esbuild.github.io/api/#jsx-factory">https://esbuild.github.io/api/# jsx-factory</a></p>
-            <p><a href="https://lwebapp.com/en/post/custom-jsx">https://lwebapp.com/en/post/custom- jsx</a></p>
+            <p><a href="https://esbuild.github.io/api/#jsx-factory">https://esbuild.github.io/api/#jsx-factory</a></p>
+            <p><a href="https://lwebapp.com/en/post/custom-jsx">https://lwebapp.com/en/post/custom-jsx</a></p>
             <p><a href="https://nakedjsx.org/">https://nakedjsx.org/</a></p>
         </section>
     </Layout>
