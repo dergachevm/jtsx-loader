@@ -36,6 +36,11 @@ export default async ({ data }) => {
             <p>Для конвертации используется <code>jsxFactory</code> функция, которая преобразует теги, аттрибуты и дочерние элементы в стандартный HTML</p>
             <p>Загрузчик позволяет расширить преобразования JTSX файлов через конфигурации и самостоятельно написанные функции</p>
             <p>Так же загрузчик позволяет предотвратить кеширование при импорте компонентов, что дает возможность комфортно использовать перезагрузку страницы при изменениях и не перезапускать сервер, которые рендерит компонент</p>
+            <p>Если вы нашли ошибку или хотите предложить улучшения для загрузчика, создайте issue на <a href="https://github.com/dergachevm/jtsx-loader/issues">github</a></p>
+
+            <h4>О документации</h4>
+            <p>Данная документация это проект внутри модуля, который можно запустить локально для изучения его работы. Исходники расположены в папке <a href="https://github.com/dergachevm/jtsx-loader/tree/master/example">example</a></p>
+            <p>Вы можете запустить ее локально с помощью <code>npm i</code> и <code>npm run start</code> или с помощью nodemon для разработки <code>npm run dev</code></p>
             <p>ВАЖНО: Данный загрузчик это НЕ замена React, Vue и их производных. Если вам нужна реактивность и толстые клиенты, то лучше использовать соответствующие инструменты</p>
 
             <p><a href="https://github.com/dergachevm/jtsx-loader">Github</a></p>
@@ -61,7 +66,7 @@ export default async ({ title }) => <html lang="ru">
     <body>
         <h1>{title}</h1>
         <p>
-            Body content with array: 
+            Body content with array:
             {[0, 1, 2].map(n => <code>{n}</code>)}
         </p>
     </body>
@@ -170,7 +175,7 @@ export default async ({ title }) => <html lang="ru">
             <p><a href="mailto:dergachev.mihail@gmail.com">Дергачев Михаил</a></p>
             <p><a href="https://ancros.dev">https://ancros.dev</a></p>
         </section>
-        
+
         <section>
             <h2>Референсы</h2>
             <p><a href="https://esbuild.github.io/api/#jsx-factory">https://esbuild.github.io/api/#jsx-factory</a></p>

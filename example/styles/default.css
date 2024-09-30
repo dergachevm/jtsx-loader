@@ -9,7 +9,7 @@ body {
     padding: 40px 80px;
 }
 
-h1, h2, h3, h4 {
+h1, h2, h3, h4, h5 {
     font-weight: 600;
     font-style: normal;
     margin: 10px 0;
@@ -85,6 +85,7 @@ section {
 
 a {
     color: #fff;
+    text-decoration: underline;
 }
 
 main {

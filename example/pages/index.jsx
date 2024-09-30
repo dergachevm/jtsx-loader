@@ -34,7 +34,12 @@ export default async ({ data }) => {
             <p>Only one dependency — esbuild</p>
             <p>For conversion, the <code>jsxFactory</code> function is used, which converts tag attributes, attributes and child elements into standard HTML</p>
             <p>The loader allows you to extend the transformation of JTSX files through configurations and self-written functions</p>
-            <p>The loader also allows you to prevent caching when importing components, which makes it possible to comfortably use page reloading when changes are made and not restart the server that renders the component</p>
+            <p>Also loader allows you to prevent caching when importing components, which makes it possible to comfortably use page reloading when changes are made and not restart the server that renders the component</p>
+            <p>If you find a bug or want to suggest improvements to the loader, create an issue on <a href="https://github.com/dergachevm/jtsx-loader/issues">github</a></p>
+
+            <h4>About documentation</h4>
+            <p>This documentation is a project within the module that can be run locally to learn how it works. The source code is located in the <a href="https://github.com/dergachevm/jtsx-loader/tree/master/example">example</a> folder</p>
+            <p>You can run it locally with <code>npm i</code> and <code>npm run start</code> or with nodemon for development <code>npm run dev</code></p>
             <p>IMPORTANT: This project is NOT a replacement for React, Vue and their derivatives. If you need reactivity and thick clients, it is better to use the appropriate tools</p>
 
             <p><a href="https://github.com/dergachevm/jtsx-loader">Github</a></p>
