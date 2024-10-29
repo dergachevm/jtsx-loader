@@ -1,8 +1,9 @@
-import { transformSync } from 'esbuild';
 import path from 'node:path';
 import { readFile } from 'fs/promises';
-import { register, isBuiltin } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { transformSync } from 'esbuild';
+import { isBuiltin } from 'node:module';
 
 // TODO: убрать esm-reload
 // INSPIRED: https://github.com/pygy/esm-reload/tree/main
