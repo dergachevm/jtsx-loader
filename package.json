@@ -11,7 +11,7 @@
         "dev": "nodemon --import ./loader/register.mjs ./example/server.js"
     },
     "engines": {
-        "node": ">=20.16 <21"
+        "node": ">=20.16 <23"
     },
     "keywords": [
         "jsx",
