@@ -68,11 +68,15 @@ const objectIntoAttrs = (object) => {
             finalValue = value;
         }
 
-        if (!finalValue) {
+        if (finalValue === false) {
             return;
         }
 
         const result = spacer + `${attr}="${finalValue}"`;
+
+        if (finalValue === undefined) {
+            result = spacer + attr;
+        }
 
         return result;
     })
