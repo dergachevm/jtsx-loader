@@ -42,7 +42,8 @@ export default async ({ data }) => {
             <p>Данная документация это проект внутри модуля, который можно запустить локально для изучения его работы. Исходники расположены в папке <a href="https://github.com/dergachevm/jtsx-loader/tree/master/example">example</a></p>
             <p>Вы можете запустить ее локально с помощью <code>npm i</code> и <code>npm run start</code> или с помощью nodemon для разработки <code>npm run dev</code></p>
             <p>ВАЖНО: Данный загрузчик это НЕ замена React, Vue и их производных. Если вам нужна реактивность и толстые клиенты, то лучше использовать соответствующие инструменты</p>
-
+            
+            <p><a href="https://www.npmjs.com/package/jtsx-loader">NPM</a></p>
             <p><a href="https://github.com/dergachevm/jtsx-loader">Github</a></p>
             <p><a href="https://github.com/dergachevm/jtsx-loader/blob/master/jtsx.config.example.js">Описание файла конфигурации</a></p>
         </section>
@@ -105,6 +106,7 @@ export default async ({ title }) => <html lang="ru">
                     <ul>
                         <li>Аттрибут <code>__escape</code>: используется для вывода любого экранированного контента</li>
                         <li>Аттрибут <code>__raw</code>: рендерит строку в содержимое тега как есть, например полезно для тегов <code>script</code> и <code>style</code></li>
+                        <li><code>{_jsxUtils.escapeHtml(`{_jsxUtils.escapeHtml('<code>examples</code>')}`)}</code> функция для экранирования HTML</li>
                         <li>В JTSX файл передается объект <code>_jsxUtils</code>, которая содержит в себе полезные утилиты. Вместо данного объекта можно передать свою любую функцию и использовать ее для расширения стандартного преобразования</li>
                     </ul>
                 </div>

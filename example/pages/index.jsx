@@ -42,6 +42,7 @@ export default async ({ data }) => {
             <p>You can run it locally with <code>npm i</code> and <code>npm run start</code> or with nodemon for development <code>npm run dev</code></p>
             <p>IMPORTANT: This project is NOT a replacement for React, Vue and their derivatives. If you need reactivity and thick clients, it is better to use the appropriate tools</p>
 
+            <p><a href="https://www.npmjs.com/package/jtsx-loader">NPM package</a></p>
             <p><a href="https://github.com/dergachevm/jtsx-loader">Github</a></p>
             <p><a href="https://github.com/dergachevm/jtsx-loader/blob/master/jtsx.config.example.js">Config file description</a></p>
         </section>
@@ -104,6 +105,7 @@ export default async ({ title }) => <html lang="en">
                     <ul>
                         <li><code>__escape</code> attribute: used to output any escaped content</li>
                         <li><code>__raw</code> attribute: renders a string into the tag content as is, for example useful for <code>script</code> tags and <code>style</code></li>
+                        <li><code>{_jsxUtils.escapeHtml(`{_jsxUtils.escapeHtml('<code>examples</code>')}`)}</code> function for escaping HTML</li>
                         <li>The JTSX file is passed the <code>_jsxUtils</code> object, which contains useful utilities. Instead of this object, you can pass any function you want and use it to extend the standard transformation</li>
                     </ul>
                 </div>
