@@ -8,7 +8,8 @@
     },
     "scripts": {
         "start": "node --import ./loader/register.mjs ./example/server.js",
-        "dev": "nodemon --import ./loader/register.mjs ./example/server.js"
+        "dev": "nodemon --import ./loader/register.mjs ./example/server.js",
+        "patch": "npm version patch && npm publish"
     },
     "engines": {
         "node": ">=20.16 <23"
