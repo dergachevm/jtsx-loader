@@ -68,11 +68,12 @@ const objectIntoAttrs = (object) => {
             finalValue = value;
         }
 
+        // TODO: how to process empty || falsy atrributes?
         if (finalValue === false) {
             return;
         }
 
-        const result = spacer + `${attr}="${finalValue}"`;
+        let result = spacer + `${attr}="${finalValue}"`;
 
         if (finalValue === undefined) {
             result = spacer + attr;
