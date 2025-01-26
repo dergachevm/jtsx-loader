@@ -178,7 +178,7 @@ export default async ({ title }) => <html lang="en">
         </section>
 
         <section>
-            <h2>References</h2>
+            <h2>Project inspired by:</h2>
             <p><a href="https://esbuild.github.io/api/#jsx-factory">https://esbuild.github.io/api/#jsx-factory</a></p>
             <p><a href="https://lwebapp.com/en/post/custom-jsx">https://lwebapp.com/en/post/custom-jsx</a></p>
             <p><a href="https://nakedjsx.org/">https://nakedjsx.org/</a></p>

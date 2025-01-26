@@ -4,7 +4,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { transformSync } from 'esbuild';
 import { isBuiltin } from 'node:module';
-
 // TODO: убрать esm-reload
 // INSPIRED: https://github.com/pygy/esm-reload/tree/main
 let id = 0;
@@ -75,7 +74,14 @@ export async function load(url, context, nextLoad) {
         try {
             transformed = transformSync(source, esbuildTransformConfig);
         } catch (error) {
-            throw new Error(error.message);
+            console.error('JTSX TRANSFORM ERROR');
+            error.errors.map(err => {
+                const errorMessage = `${err.location.lineText}
+${err.text}
+${filePath}:${err.location.line}-${err.location.column}`;
+                // console.error('FULL DETAILS', err);
+                throw new Error(errorMessage);
+            })
         }
 
         return {

@@ -179,16 +179,10 @@ export default async ({ title }) => <html lang="ru">
         </section>
 
         <section>
-            <h2>Референсы</h2>
+            <h2>Проект вдохновлен следующими работами:</h2>
             <p><a href="https://esbuild.github.io/api/#jsx-factory">https://esbuild.github.io/api/#jsx-factory</a></p>
             <p><a href="https://lwebapp.com/en/post/custom-jsx">https://lwebapp.com/en/post/custom-jsx</a></p>
             <p><a href="https://nakedjsx.org/">https://nakedjsx.org/</a></p>
         </section>
-
-        {/*
-        Inline functions not allowed
-        <form action="/api" onSubmit={async () => {
-            await console.log('ONSUBMIT');
-        }} novalidate></form> */}
     </Layout>
 }
