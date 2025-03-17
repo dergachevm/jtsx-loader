@@ -127,7 +127,8 @@ const _jsx = (tagName, attrs, ...children) => {
         const tag = createTag(tagName, attrs, children);
         return tag;
     } catch (error) {
-        throw new Error(error);
+        console.error('Error on rendering JSX Component in jtsx-loader factory module:');
+        console.error(error);
     }
 }
 
