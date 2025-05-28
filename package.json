@@ -1,6 +1,6 @@
 {
     "name": "jtsx-loader",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "main": "./loader/register.mjs",
     "type": "module",
     "imports": {
