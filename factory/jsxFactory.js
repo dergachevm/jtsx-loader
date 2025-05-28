@@ -14,10 +14,10 @@ let config = {
 
 // Какие аттрибуты должны быть заменены
 const AttributeMapper = (val) => ({
-        tabIndex: 'tabindex',
-        className: 'class',
-        readOnly: 'readonly',
-    }[val] || val);
+    tabIndex: 'tabindex',
+    className: 'class',
+    readOnly: 'readonly',
+}[val] || val);
 
 const voidElements = ['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'];
 const isVoidElt = (tagName) => voidElements.includes(tagName);
@@ -119,26 +119,16 @@ const createTag = (tagName, attrs, children) => {
 }
 
 const _jsx = (tagName, attrs, ...children) => {
-    try {
-        if (typeof tagName === 'function') {
-            return tagName({ ...attrs, children: children.length === 1 ? children[0] : children });
-        }
-
-        const tag = createTag(tagName, attrs, children);
-        return tag;
-    } catch (error) {
-        console.error('Error on rendering JSX Component in jtsx-loader factory module:');
-        console.error(error);
+    if (typeof tagName === 'function') {
+        return tagName({ ...attrs, children: children.length === 1 ? children[0] : children });
     }
+
+    const tag = createTag(tagName, attrs, children);
+    return tag;
 }
 
 const _jsxFragment = ({ children, ...attrs }) => {
     return children.join(' ');
 }
-
-/* export {
-    DOMcreateElement as h,
-    DOMcreateFragment as Fragment,
-} */
 
 export { _jsx, _jsxFragment, _jsxUtils }
