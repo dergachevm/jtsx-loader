@@ -19,14 +19,15 @@
         "tsx",
         "loader",
         "html",
-        "static"
+        "static",
+        "template engine"
     ],
     "author": "Dergachev Mihail <dergachev.mihail@gmail.com>",
     "license": "MIT",
     "description": "JSX and TSX loader that allows you to compile to static HTML",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/dergachevm/jtsx-loader"
+        "url": "git+https://github.com/dergachevm/jtsx-loader.git"
     },
     "dependencies": {
         "esbuild": "^0.25.5"
