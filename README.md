@@ -106,29 +106,41 @@ app.listen(port, () => {
 
 ```jsx
 const Component = async ({ message }) => {
-  const exampleObject = { example: 'object' };
+    // It's not a good practice to make queries here. This example demonstrates full asynchronuos JavaScript support within the template.
+    const exampleObject = { example: 'object'};
 
-  return (
-    <>
-      <html>
-        <head>
-          <title>{message}</title>
-        </head>
-        <body>
-          <h2>{message}</h2>
+    // Uncomment to test fetch
+    // const fetchOnEachRender = await fetch('https://httpbingo.org/json').then(r => r.json());
 
-          <pre>{JSON.stringify(exampleObject, null, 2)}</pre>
+    // Example with Fragment
+    return <>
+        {'<!DOCTYPE HTML>'}
+        <html>
+            <head>
+                <title>{message}</title>
+            </head>
+            <body>
+                <div>
+                    <h2>{message}</h2>
+                    <p>Example object</p>
+                    <pre>{JSON.stringify(exampleObject, null, 4)}</pre>
+                    <p>Open console to see same object passed from server inside JavaScript</p>
 
-          <script>{`
-            window.serverObject = ${JSON.stringify(exampleObject)};
-            console.log(window.serverObject);
-          `}</script>
-        </body>
-      </html>
-    </>
-  );
-};
 
+                    {/* Uncomment to test fetch */}
+                    {/* <p>Response from <a href="https://httpbingo.org/json">https://httpbingo.org/json</a></p>
+                    <pre>{JSON.stringify(fetchOnEachRender, null, 4)}</pre> */}
+                </div>
+                <script>{`
+                    window.sum = 5 + 5;
+                    console.log('window.sum', window.sum);
+                    window.serverObject = ${JSON.stringify(exampleObject)}; // pass object from backend to frontend
+                    console.log('window.serverObject', window.serverObject);
+                `}</script>
+            </body>
+        </html>
+    </>;
+}
 export default Component;
 ```
 
