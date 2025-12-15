@@ -25,7 +25,7 @@
     ],
     "author": "Dergachev Mihail <dergachev.mihail@gmail.com>",
     "license": "MIT",
-    "description": "JSX and TSX loader that allows you to compile to static HTML",
+    "description": "Loader for node.js that allows you to load JSX and TSX files and use it as functions",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/dergachevm/jtsx-loader.git"
