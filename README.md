@@ -92,7 +92,7 @@ app.use('/', async (req, res) => {
   }
 
   const html = await Component({ message: 'Hello JSX' });
-  return res.send(`<!DOCTYPE html>${html}`);
+  return res.send(html);
 });
 
 app.listen(port, () => {
