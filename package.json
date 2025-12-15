@@ -12,7 +12,7 @@
         "patch": "npm version patch && npm publish"
     },
     "engines": {
-        "node": ">=20.16 <23"
+        "node": ">=20.16 <25"
     },
     "keywords": [
         "jsx",
@@ -20,6 +20,7 @@
         "loader",
         "html",
         "static",
+        "node",
         "template engine"
     ],
     "author": "Dergachev Mihail <dergachev.mihail@gmail.com>",
@@ -30,11 +31,11 @@
         "url": "git+https://github.com/dergachevm/jtsx-loader.git"
     },
     "dependencies": {
-        "esbuild": "^0.25.5"
+        "esbuild": "^0.27.1"
     },
     "devDependencies": {
-        "express": "^5.1.0",
-        "htmlfy": "^0.7.5",
-        "nodemon": "^3.1.10"
+        "express": "^5.2.1",
+        "htmlfy": "^1.0.1",
+        "nodemon": "^3.1.11"
     }
 }
