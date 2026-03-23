@@ -128,7 +128,11 @@ const _jsx = (tagName, attrs, ...children) => {
 }
 
 const _jsxFragment = ({ children, ...attrs }) => {
-    return children.join(' ');
+    if (typeof children === 'object') {
+        return children.join(' ');
+    }
+
+    return children;
 }
 
 export { _jsx, _jsxFragment, _jsxUtils }

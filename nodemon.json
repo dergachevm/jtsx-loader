@@ -3,6 +3,6 @@
         ".git",
         "node_modules/**/node_modules"
     ],
-    "watch": ["./src/**/*.*", "./example/**/*.*", "./*.*"],
-    "quiet": true
+    "watch": ["./src/**/*.*", "./example/**/*.*", "./factory/*.*", "./*.*"],
+    "quiet": false
 }
