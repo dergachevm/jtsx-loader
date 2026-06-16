@@ -31,11 +31,11 @@
         "url": "git+https://github.com/dergachevm/jtsx-loader.git"
     },
     "dependencies": {
-        "esbuild": "^0.27.2"
+        "esbuild": "^0.28.1"
     },
     "devDependencies": {
         "express": "^5.2.1",
-        "htmlfy": "^1.0.1",
-        "nodemon": "^3.1.11"
+        "htmlfy": "^1.0.2",
+        "nodemon": "^3.1.14"
     }
 }
