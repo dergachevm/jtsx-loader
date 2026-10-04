@@ -1,7 +1,7 @@
 import test from 'node:test';
 import { runFixture, expectSuccess } from './helpers/fixture.mjs';
 
-// Hand-reviewed baseline: 0.1.15 / 71dd852, plans/COMPATIBILITY.md K2.
+// Compatibility baseline: 0.1.15 / 71dd852.
 // Do not regenerate these expectations from the implementation under test.
 test('legacy HTML, whitespace, attributes and component result types', t => {
     expectSuccess(runFixture(t, { code: `

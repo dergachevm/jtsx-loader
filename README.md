@@ -2,21 +2,12 @@
 
 Import `.jsx` and `.tsx` files in Node.js and render HTML with ordinary functions. Templates are transpiled with esbuild; no browser runtime or hydration is added.
 
-**Release status:** the fixes and opt-in options described under **Unreleased** are implemented in this checkout. The package version remains `0.1.15`; this work has not published a new release. Installing the existing npm release does not provide these new features. See [CHANGELOG.md](CHANGELOG.md).
-
 ## Requirements
 
-- Node.js `>=20.16`, matching `package.json#engines`; there is no upper version cap. Node.js 22 and newer are included without dropping previously supported 20.x releases.
+- Node.js `>=20.16`.
 - ESM: `"type": "module"`.
-- The full suite has been checked on **Node.js 26.10.0 / Windows**, with loader/render compatibility checks on older releases (see [PLAN.md](PLAN.md)). Other operating systems and future Node.js releases have not been tested.
 
-The unchanged `node --import jtsx-loader app.js` entry point selects `module.registerHooks()` when available (Node.js 22.15+ and 23.5+, including 24/26). These hooks are synchronous, as required by the API. Earlier supported versions, including Node.js 22.0–22.14, use the existing asynchronous `module.register()` path. This avoids Node.js 26's `DEP0205` warning without suppressing deprecations. See the [Node.js registration API](https://nodejs.org/api/module.html#moduleregisterhooksoptions).
-
-The legacy `loader/loader.mjs` deep path remains available for applications registering asynchronous hooks themselves; switch those callers to `--import jtsx-loader` to get automatic API selection. Configuration is awaited before synchronous hooks are installed, so an ESM config may still use top-level await.
-
-TSX is transpiled, not type-checked. The loader handles `.jsx` and `.tsx`; ordinary `.ts` imports are delegated to Node and are not made portable by this package.
-
-## Quick start (legacy-compatible)
+## Quick start
 
 Install the loader:
 
@@ -49,7 +40,7 @@ Run:
 node --import jtsx-loader app.js
 ```
 
-The default factory returns an HTML string synchronously for a native tag. A function component returns its own result, which may be a Promise. **Await nested async components explicitly**, as in `await Child()` above; legacy `<Child />` does not automatically wait for its Promise.
+The default factory returns an HTML string synchronously for a native tag. A function component returns its own result, which may be a Promise. **Await nested async components explicitly**, as in `await Child()` above, or select the [async factory](#async-factory) to await them automatically.
 
 For Express SSR, install Express separately and use a fixed route:
 
@@ -72,28 +63,20 @@ app.listen(3000);
 
 An optional `jtsx.config.js` is loaded from **the process working directory**, not from the template's directory. Export a configuration object. See the commented [configuration example](jtsx.config.example.js).
 
-Existing keys remain available:
-
 | Key | Default / behavior |
 | --- | --- |
 | `importFactory` | Imports `_jsx`, `_jsxFragment`, `_jsxUtils` from `jtsx-loader/factory/jsxFactory.js` |
 | `esbuildTransformConfig` | No user options; properties override the loader's esbuild transform options |
+| `injectFactory` | `'legacy'`: inject the factory import when `esbuildTransformConfig` is falsy. `true`: always inject. `false`: import manually in templates |
+| `escapeAttributes` | `false`; set to `true` to escape ordinary attribute values |
 | `attributeParser` | An empty object; callbacks receive `(attribute, value)` by attribute prefix |
 | `disableAttrWarnings` | Warnings enabled; `true` silences React-style attribute warnings |
-| `rewriteReactAttrs` | No general rewriting; `true` enables the existing attribute map. `className` always becomes `class` |
+| `rewriteReactAttrs` | `false`; `true` rewrites React-style names to HTML names. `className` always becomes `class` |
 
-The following options are **Unreleased** and opt-in:
-
-| Option | Without opt-in | Explicit mode |
-| --- | --- | --- |
-| `injectFactory` | `'legacy'`: inject only when `!esbuildTransformConfig` | `true`: always inject; `false`: leave imports to the template |
-| `escapeAttributes` | `false`: legacy attribute values | `true`: escape ordinary attribute values |
-| `JTSX_STRICT_CONFIG` environment variable | Warn and use defaults when an existing config cannot load | `1`: fail with the original cause |
-
-For example, opt into attribute escaping and use minification without losing the factory import:
+For example, enable attribute escaping and minification:
 
 ```js
-// jtsx.config.js — Unreleased
+// jtsx.config.js
 export default {
     injectFactory: true,
     escapeAttributes: true,
@@ -101,16 +84,14 @@ export default {
 };
 ```
 
-With `injectFactory` omitted, even `esbuildTransformConfig: {}` still disables injection, preserving the previous behavior. Projects that already import the factory manually can keep their existing configuration or set `injectFactory: false`. Do not combine a manual import of the same names with `injectFactory: true`.
+Set `injectFactory: true` when supplying `esbuildTransformConfig`, including `{}`, unless templates import the factory themselves. Do not combine a manual import of the same names with `injectFactory: true`.
 
-A missing config remains optional in strict mode. A syntax error, a thrown error, or a missing dependency of an existing config is reported with its path and cause. Set the environment variable outside the config, for example in PowerShell:
+A missing config uses defaults. If an existing config fails to load, the loader warns with its path and cause, then uses defaults. Set `JTSX_STRICT_CONFIG=1` to fail instead. Set it outside the config, for example in PowerShell:
 
 ```powershell
 $env:JTSX_STRICT_CONFIG = '1'
 node --import jtsx-loader app.js
 ```
-
-Configuration may execute in both the loader's context and the application's context. Keep it free of side effects; do not assume one evaluation or one warning per process.
 
 ## Escaping and trusted HTML
 
@@ -146,9 +127,9 @@ export default {
 
 Here the attribute name comes from template code. The callback's complete returned fragment is never escaped by the loader.
 
-## Async factory (Unreleased, opt-in)
+## Async factory
 
-Select the new factory explicitly:
+Select the async factory in your configuration:
 
 ```js
 // jtsx.config.js
@@ -177,21 +158,9 @@ try {
 }
 ```
 
-The new factory's `_jsx` and `_jsxFragment` return `Promise<string>`. They resolve nested arrays and Promises concurrently while preserving their source order. Null, undefined and boolean children are omitted; numbers (including zero) and bigint values remain. Unsupported object children reject: convert them to text explicitly.
+The async factory's `_jsx` and `_jsxFragment` return `Promise<string>`. They resolve nested arrays and Promises concurrently while preserving their source order. Null, undefined and boolean children are omitted; numbers (including zero) and bigint values remain. Unsupported object children reject: convert them to text explicitly.
 
 Arrays and fragments join without implicit spaces; add text spaces in your template when required. After resolution, function components receive `children` as `[]`, one value, or an array. `__raw=0` and `__escape=0` produce `0`; null/undefined payloads are absent and other scalar payloads are stringified. Promises in attributes are not awaited.
-
-## Preserved legacy behavior
-
-Updating the library does not select the async factory or enable attribute escaping. Public deep paths and the synchronous factory API remain available.
-
-- Arrays and fragments retain their old spaces and value rules.
-- A lone `false` fragment still returns `false`; `__escape=0` still produces no content. Use `__escape={String(value)}` for legacy numeric text.
-- Ordinary attributes keep the previous boolean/null/undefined rules, even with attribute escaping: `true` is quoted, `false` omitted, `null` becomes `"null"`, and `undefined` gives a bare attribute.
-- Children are followed by `__raw`, then `__escape`.
-- Only the narrow repairs listed in the changelog alter default behavior: null fragments, null styles, backslashes, file URL hashes and diagnostics.
-
-The existing `?reload` import mechanism and dependency propagation remain available for compatibility. It creates new ESM module identities; it does **not** unload old modules or bound their memory use. Use process restarts during development and ordinary imports for a long-running server.
 
 ## Run this repository's demo
 
@@ -211,7 +180,7 @@ npm start -- --write-html
 
 Development uses nodemon to restart on changes to loader, factory, templates and configuration, including JSX/TSX. Consumers using nodemon should install it as a dev dependency and explicitly include `jsx,tsx` in its extensions; see [nodemon.json](nodemon.json). CSS is served from disk and needs a browser refresh.
 
-## Verification and project work
+## Development checks
 
 ```sh
 npm test
@@ -223,4 +192,14 @@ npm run test:package
 
 `test:package` separately runs a pack preview, creates a tarball and installs it into an independent temporary project. It checks public registration, both factories and installed esbuild without source links. It may need npm registry access.
 
-👉 [https://jtsx.ancros.dev](https://jtsx.ancros.dev)
+See the [changelog](CHANGELOG.md) for release history.
+
+## Important notes
+
+- TSX is transpiled, not type-checked. Only `.jsx` and `.tsx` are transformed; ordinary `.ts` imports are delegated to Node.js.
+- String children are raw HTML in both factories. Use `__escape` for untrusted text and enable `escapeAttributes` for ordinary attribute values; neither sanitizes HTML or validates URLs.
+- With the default factory, arrays and fragments insert spaces between their items, and falsy `__raw` / `__escape` payloads are omitted. Use `__escape={String(value)}` when a numeric value may be zero. Content is rendered in this order: children, `__raw`, `__escape`.
+- Ordinary attributes serialize `true` as `"true"`, omit `false`, serialize `null` as `"null"`, and render `undefined` as a bare attribute. `style={null}` is omitted. Function-valued attributes are ignored with a warning; browser event handlers are not installed.
+- Configuration may execute in both loader and application contexts. Avoid side effects and do not assume a single evaluation. A missing config is optional even with `JTSX_STRICT_CONFIG=1`.
+- Use `node --import jtsx-loader` for automatic Node.js hook selection. Direct registration of `jtsx-loader/loader/loader.mjs` uses the asynchronous API, which is deprecated in Node.js 26.
+- `?reload` creates new ESM module identities, including for dependencies, without unloading old modules. Use process restarts in development and ordinary imports in long-running servers.

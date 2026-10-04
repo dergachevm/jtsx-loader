@@ -1,7 +1,7 @@
 import { escapeHtml } from 'jtsx-loader/factory/jsxUtils.js';
 
 export default {
-    // Unreleased opt-ins; omitted options keep the 0.1.15 legacy behavior.
+    // Control automatic factory imports.
     // 'legacy': inject only without esbuildTransformConfig.
     // true: inject even with {} / minify; false: templates import their factory.
     injectFactory: 'legacy',

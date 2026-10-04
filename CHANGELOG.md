@@ -1,13 +1,20 @@
 # Changelog
 
+## 0.1.18 — 2026-10-05
 
-### Node.js compatibility — 2026-10-03
+- Update README and the configuration example to describe published features, configuration and async rendering.
+- Remove outdated unreleased notices and compatibility commentary from the main guide; collect important rendering and runtime limitations at the end.
+- Correct release status and remove broken documentation references.
+
+## 0.1.16–0.1.17 — 2026-10-04
+
+### Node.js compatibility
 
 - Remove the upper engine cap: `>=20.16`, retaining the existing minimum and allowing Node.js 22 and later.
 - Select `module.registerHooks()` by API availability; retain `module.register()` on older supported releases. Node.js 26 no longer invokes the deprecated API through the public `--import jtsx-loader` entry point.
 - Share resolution and transformation between synchronous and asynchronous adapters, preserving the legacy `loader/loader.mjs` path, configuration, JSX/TSX behavior and `?reload` dependency identities.
 - Await ESM configuration before installing synchronous hooks. Preserve factory selection and all rendering defaults.
-- Add regression checks for deprecation-free registration, hook chaining/CommonJS delegation and legacy asynchronous exports. Node.js 26.10.0: 38/38 tests and independent tarball installation passed on Windows. The older-version matrix is recorded in PLAN.md.
+- Add regression checks for deprecation-free registration, hook chaining/CommonJS delegation and legacy asynchronous exports. Node.js 26.10.0: 38/38 tests and independent tarball installation passed on Windows.
 
 ### Fixed with legacy defaults preserved
 
@@ -31,8 +38,7 @@
 - Write generated HTML only with `--write-html`.
 - Opt the demo into attribute escaping and show explicit escaping of fetched text.
 - Add regression/compatibility tests, HTTP and development-restart checks, plus an independent tarball installation check.
-- The original Stage 1 aligned documentation with `>=20.16 <25` and was checked on Node.js 22.14.0/Windows. The October compatibility update above removes that upper bound.
 
 ### Compatibility limits
 
-No version bump, publication or exports restriction is included. The supported-engine change only removes the upper bound. Legacy string children are still raw, nested async children still require explicit awaiting, and `?reload` still grows the ESM cache. New factory/escaping options do not automatically repair those behaviors for existing configurations. Full consumer-project and cross-platform validation is deferred to the next stage.
+The supported-engine change only removes the upper bound. With the default factory, string children are raw and nested async children require explicit awaiting. `?reload` grows the ESM cache. Attribute escaping and the async factory require explicit configuration. Full consumer-project and cross-platform validation has not been performed.
