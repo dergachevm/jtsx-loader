@@ -1,14 +1,13 @@
 import possibleAttributes from './possibleAttributes.js';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { readConfig } from '../loader/config.mjs';
 import _jsxUtils, { escapeHtml } from './jsxUtils.js';
 
 // WARN: сделать вставку html без аттрибута нельзя, потому что тогда нужно писать новый синтаксис для vscode
-const configUrl = pathToFileURL(path.join(process.cwd(), 'jtsx.config.js'));
-const loadedConfig = (await import(configUrl.href).catch(() => ({}))).default;
+const loadedConfig = await readConfig();
 
 let config = {
     attributeParser: {},
+    escapeAttributes: false,
     ...loadedConfig
 };
 
@@ -60,6 +59,7 @@ const objectIntoAttrs = (object) => {
         }
 
         if (attr === 'style' && typeof value === 'object') {
+            if (value === null) return;
             finalValue = Object.keys(value).map((key, i) => {
                 const v = value[key];
                 return `${key}: ${v};`;
@@ -71,6 +71,12 @@ const objectIntoAttrs = (object) => {
         // TODO: how to process empty || falsy atrributes?
         if (finalValue === false) {
             return;
+        }
+
+        // Custom parsers above own their HTML fragments. Only ordinary values
+        // are escaped here, and only for consumers opting into the new policy.
+        if (config.escapeAttributes === true && finalValue !== undefined) {
+            finalValue = escapeHtml(finalValue);
         }
 
         let result = spacer + `${attr}="${finalValue}"`;
@@ -128,6 +134,7 @@ const _jsx = (tagName, attrs, ...children) => {
 }
 
 const _jsxFragment = ({ children, ...attrs }) => {
+    if (children === null) return '';
     if (typeof children === 'object') {
         return children.join(' ');
     }

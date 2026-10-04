@@ -3,6 +3,7 @@
         ".git",
         "node_modules/**/node_modules"
     ],
-    "watch": ["./src/**/*.*", "./example/**/*.*", "./factory/*.*", "./*.*"],
+    "watch": ["./loader", "./factory", "./example", "./jtsx.config.js", "./package.json"],
+    "ext": "js,mjs,cjs,json,jsx,tsx",
     "quiet": false
 }

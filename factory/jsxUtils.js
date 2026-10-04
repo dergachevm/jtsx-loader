@@ -7,7 +7,7 @@ const entityMap = {
     "/": '#x2F',
 };
 
-const escapeHtml = (str) => String(str).replace(/[&<>"'\/\\]/g, (s) => `&${entityMap[s]};`);
+const escapeHtml = (str) => String(str).replace(/[&<>"'\/]/g, (s) => `&${entityMap[s]};`);
 
 export default {
     escapeHtml

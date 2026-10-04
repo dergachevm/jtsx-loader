@@ -145,7 +145,7 @@ export default async ({ title }) => <html lang="ru">
                     <p>Вызывается при каждом рендеринге</p>
                     <p>Если вызывается внутренний сервер, то он должен быть запущен до запуска рендеринга</p>
                     <pre>
-                        Ответ: {JSON.stringify(inlineRequest, null, 4)}
+                        Ответ: <span __escape={JSON.stringify(inlineRequest, null, 4)}></span>
                     </pre>
                 </div>
 

@@ -144,7 +144,7 @@ export default async ({ title }) => <html lang="en">
                     <p>Called on every render</p>
                     <p>If the internal server is called, it must be running before the render starts</p>
                     <pre>
-                        Response: { JSON.stringify(inlineRequest, null, 4) }
+                        Response: <span __escape={JSON.stringify(inlineRequest, null, 4)}></span>
                     </pre>
                 </div>
 

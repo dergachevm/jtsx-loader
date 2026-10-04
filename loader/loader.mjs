@@ -1,95 +1,17 @@
-import path from 'node:path';
-import { readFile } from 'fs/promises';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { readFile } from 'node:fs/promises';
+import { readConfig } from './config.mjs';
+import { getTemplatePath, resolveReload, createTransform } from './hooks.mjs';
 
-import { transformSync } from 'esbuild';
-import { isBuiltin } from 'node:module';
-// TODO: убрать esm-reload
-// INSPIRED: https://github.com/pygy/esm-reload/tree/main
-let id = 0;
+const transform = createTransform(await readConfig());
+
+// Keep the public asynchronous hook entry point for older Node.js and consumers
+// that explicitly register loader/loader.mjs themselves.
 export async function resolve(specifier, context, nextResolve) {
-    const result = await nextResolve(specifier, context);
-
-    if (!isBuiltin(result.url) && context.parentURL) {
-        const url = new URL(result.url);
-        const parentUrl = new URL(context.parentURL);
-        // TODO: заменить на v=1
-        const instance = url.searchParams.get("reload") === ""
-            ? `esm-reload-${id++}`
-            : parentUrl.searchParams.get("instance");
-
-
-        if (instance !== null) {
-            if (url.searchParams.has('reload')) {
-                url.searchParams.delete('reload')
-            }
-            url.searchParams.set("instance", instance);
-
-            return {
-                ...result,
-                url: `${url}`,
-            };
-        }
-    }
-    return result;
+    return resolveReload(await nextResolve(specifier, context), context);
 }
 
-/* INFO:
-    import.meta.dirname всегда указывает на расположение текущего файла
-    cwd полностью зависит от контекста вызова
-*/
-
-const configUrl = pathToFileURL(path.join(process.cwd(), 'jtsx.config.js'));
-let loadedConfig = (await import(configUrl.href).catch(() => ({}))).default;
-
-let config = {
-    esbuildTransformConfig: null,
-    importFactory: `import { _jsx, _jsxFragment, _jsxUtils } from 'jtsx-loader/factory/jsxFactory.js';`,
-    ...loadedConfig
-};
-
-// TODO: typescript supported, add types for native HTML
 export async function load(url, context, nextLoad) {
-    const urlSanitized = url.split('?')[0];
-
-    if (urlSanitized.endsWith('.jsx') || urlSanitized.endsWith('.tsx')) {
-        const ext = (urlSanitized.endsWith('.jsx') && 'jsx') || (urlSanitized.endsWith('.tsx') && 'tsx');
-        const filePath = fileURLToPath(url);
-
-        let source = (await readFile(filePath, 'utf-8')).toString();
-
-        if (!config?.esbuildTransformConfig) {
-            source = config.importFactory + '\n' + source;
-        }
-
-        const esbuildTransformConfig = {
-            jsxFactory: '_jsx',
-            jsxFragment: '_jsxFragment',
-            loader: ext,
-            format: 'esm',
-            ...config.esbuildTransformConfig
-        };
-
-        let transformed;
-        try {
-            transformed = transformSync(source, esbuildTransformConfig);
-        } catch (error) {
-            console.error('JTSX TRANSFORM ERROR');
-            error.errors.map(err => {
-                const errorMessage = `${err.location.lineText}
-${err.text}
-${filePath}:${err.location.line}-${err.location.column}`;
-                // console.error('FULL DETAILS', err);
-                throw new Error(errorMessage);
-            })
-        }
-
-        return {
-            format: 'module',
-            source: transformed.code,
-            shortCircuit: true,
-        };
-    }
-
-    return nextLoad(url, context);
+    const filePath = getTemplatePath(url);
+    if (!filePath) return nextLoad(url, context);
+    return transform(filePath, await readFile(filePath, 'utf8'));
 }

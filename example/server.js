@@ -1,71 +1,47 @@
-import express, { Router } from 'express';
+import express from 'express';
 import path from 'node:path';
-import fs from 'node:fs';
-// import { prettify } from 'htmlfy';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 
 const port = process.env.PORT || 3001;
 process.env.URL = process.env.URL || 'http://localhost:' + port;
 const app = express();
-let server = app;
+const exampleDirectory = fileURLToPath(new URL('./', import.meta.url));
+const writeHTML = process.argv.includes('--write-html');
 
-
-const router = Router();
-// jtsx-loader server
-app.use('/', express.static(path.resolve('./example')));
-app.use('/', router);
-
-const saveFile = (dir, name, data) => {
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(dir + '/' + name, data);
+// Only public assets are served; templates and server code stay private.
+app.use('/styles', express.static(path.join(exampleDirectory, 'styles')));
+for (const name of ['200.json', '401.json']) {
+    app.get('/api/' + name, (req, res) => res.sendFile(path.join(exampleDirectory, 'api', name)));
 }
 
-const saveHTML = (filePath, data) => {
-    const parsed = path.parse(filePath);
-    const name = parsed.name + '.html';
-    // console.log('name', name);
-    saveFile(parsed.dir, name, data);
-}
-
+const pages = new Map([['/', 'index'], ['/ru', 'ru'], ['/test', 'test']]);
 let renderCount = 0;
-const render = async (page) => {
-    console.time('Render');
-    // const fileName = 'test.jsx';
-    const fileName = (!page || page === '/'  ? 'index' : page) + '.jsx';
-
-    //INFO: The ?reload parameter is required in development mode to prevent import caching
-    const JSXComp = (await import('./pages/' + fileName + '?reload')).default;
-    let rendered = await JSXComp({ data: renderCount, title: 'Hello' });
-    /* rendered = rendered + `<style>
-        body {
-            color: #fff;
-            background-color: #000;
+for (const [route, page] of pages) {
+    app.get(route, async (req, res, next) => {
+        try {
+            // Development changes restart the process through nodemon.
+            const Component = (await import('./pages/' + page + '.jsx')).default;
+            const rendered = await Component({ data: ++renderCount, title: 'Hello' });
+            if (writeHTML) {
+                const outputDirectory = path.resolve('build');
+                await mkdir(outputDirectory, { recursive: true });
+                await writeFile(path.join(outputDirectory, page + '.html'), rendered);
+            }
+            res.type('html').send(rendered);
+        } catch (error) {
+            next(error);
         }
-    </style>`; */
-    // rendered = prettify(rendered);
-    saveHTML('build/' + fileName, rendered);
-    console.timeEnd('Render');
-    console.log('================================================');
-
-    return rendered;
+    });
 }
 
-// Prerender chunks on cold start if needed
-// await render();
-
-router.get('/', async (req, res) => {
-    renderCount++;
-    return res.send(await render());
+app.use((req, res) => res.status(404).type('text').send('Not found'));
+app.use((error, req, res, next) => {
+    console.error('[jtsx-loader demo] Render failed:', error);
+    if (res.headersSent) return next(error);
+    res.status(500).type('text').send('Internal server error');
 });
 
-router.get('/:page', async (req, res) => {
-    if (req.params.page.includes('.')) return res.status(404);
-    renderCount++;
-    return res.send(await render(req.params.page));
-});
-
-
-server.listen(port, () => {
-    console.log(`-------------------------------------`);
+app.listen(port, () => {
     console.log(`Static server: http://localhost:${port}`);
-    console.log(`-------------------------------------`);
 });
