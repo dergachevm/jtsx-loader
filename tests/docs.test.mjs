@@ -71,6 +71,37 @@ test('highlighting preserves source text and never inserts executable sample tag
     }
 });
 
+test('documented dev server refreshes a nested component and recovers after a template error', (t) => {
+    expectSuccess(runFixture(t, {
+        register: false,
+        files: examples,
+        env: { PORT: '0' },
+        code: `
+            const { writeFile } = await import('node:fs/promises');
+            const { once } = await import('node:events');
+            const { server } = await import('./dev-server.js');
+            try {
+                if (!server.listening) await once(server, 'listening');
+                const url = 'http://127.0.0.1:' + server.address().port;
+                const before = await fetch(url);
+                assert.equal(before.status, 200);
+                assert.ok(before.headers.get('content-type').startsWith('text/html'));
+                assert.ok((await before.text()).includes('<output aria-live="polite">3</output>'));
+                assert.equal((await fetch(url + '/missing')).status, 404);
+                await writeFile('Counter.jsx', 'export default () => <p>Updated component</p>;');
+                assert.equal(await (await fetch(url)).text(), '<main><h1>Live JSX</h1><p>Updated component</p></main>');
+                await writeFile('Counter.jsx', 'export default () => <p>');
+                assert.equal((await fetch(url)).status, 500);
+                await writeFile('Counter.jsx', 'export default () => <p>Fixed</p>;');
+                assert.equal(await (await fetch(url)).text(), '<main><h1>Live JSX</h1><p>Fixed</p></main>');
+            } finally {
+                server.closeAllConnections();
+                await new Promise(resolve => server.close(resolve));
+            }
+        `,
+    }));
+});
+
 test('both documentation languages share complete sections and executable snippets', () => {
     const ru = sections('ru');
     const en = sections('en');
@@ -86,13 +117,14 @@ test('both documentation languages share complete sections and executable snippe
                     s.title &&
                     s.intro &&
                     s.paragraphs.length &&
-                    s.blocks.length,
+                    (s.blocks.length || s.topics?.some((topic) => topic.blocks.length)),
             ),
         );
         for (const name of Object.keys(examples))
             assert.ok(
                 list.some((s) =>
-                    s.blocks.some((b) => b.code === examples[name]),
+                    [...s.blocks, ...(s.topics || []).flatMap((topic) => topic.blocks)]
+                        .some((b) => b.code === examples[name]),
                 ),
                 name,
             );

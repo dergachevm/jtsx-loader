@@ -328,7 +328,33 @@ Open [English documentation](http://localhost:3001/) or [русскую доку
 
 Executable examples are shared by both languages. `npm start` registers hooks from code without `--import`; `npm run dev` restarts the process on changes. Requested pages are only saved to `build/` with `--write-html`.
 
-`?reload` creates fresh ESM identities for templates and dependencies. It does **not** unload modules or bound memory. Prefer process restarts during development and ordinary imports in production.
+### Refresh templates in a running Node process
+
+Node caches imported modules. Editing a JSX file or refreshing a browser tab does not update modules already loaded by the server. To read an edited template without restarting Node, append `?reload` **to the path inside a dynamic import**:
+
+```js
+import { renderToString } from 'jtsx-loader';
+
+export async function renderPage(props) {
+    const { default: Page } = await import('./Page.jsx?reload');
+    return renderToString(await Page(props));
+}
+```
+
+The actual file remains `Page.jsx`. This is not a CLI flag or a browser URL parameter. Use `?reload` without a value. Each call to `renderPage` obtains a fresh template and its ESM dependencies, including nested JSX/TSX components and JS modules. Child imports need no extra parameter. Reusing an old `Page` variable keeps calling the old component.
+
+For a runnable example, save [reload.js](example/docs/examples/reload.js) and [dev-server.js](example/docs/examples/dev-server.js) beside `Page.jsx` and `Counter.jsx` from the documentation quick start. Run `node dev-server.js`, open `http://localhost:3000/`, edit `Counter.jsx`, then refresh the page. The updated component renders without restarting the server.
+
+`?reload` does not watch files, refresh the browser automatically or clear CommonJS `require.cache`. It creates new ESM instances without unloading old ones, and dependency initialization may run again. Use it for development, restart during long sessions, and use ordinary imports in production. Restart Node after changing `jtsx.config.js`.
+
+Alternatively, restart your existing server when files change:
+
+```sh
+npm install --save-dev nodemon
+npx nodemon --watch . --ext js,mjs,cjs,json,jsx,tsx --ignore dist/ --ignore build/ bootstrap.js
+```
+
+This uses the Express `bootstrap.js` example and needs no `?reload`. Refresh the browser after the server restarts. The repository's `npm run dev` script runs the documentation site; installing the package does not add that script to your project.
 
 JSX/TSX is transpiled, not type-checked. Ordinary `.ts` files are delegated to Node; support depends on the Node version. Complete JSX namespace/prop typings are not yet shipped. No routing, client reactivity, hydration or streaming is provided.
 

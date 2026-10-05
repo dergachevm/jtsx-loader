@@ -5,6 +5,7 @@
 - Use `npm install jtsx-loader` as the documented installation path. Include setup for a new project with `npm init -y` and ESM configuration, alongside installation in an existing project.
 - Present existing and new project setup as keyboard-accessible tabs in both documentation languages.
 - Render migration steps as a vertical numbered list, document native `class` usage and remove the highlighter credit from the documentation UI.
+- Explain where to use `?reload`, add a runnable development server and nested-component refresh example, expand troubleshooting, and clarify setup and output for the main documentation examples.
 
 ### Universal JSX without React
 

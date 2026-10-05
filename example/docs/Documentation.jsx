@@ -251,6 +251,16 @@ export default ({ lang = 'ru' }) => {
                                             ))}
                                         </div>
                                     )}
+                                    {section.topics?.map((topic) => (
+                                        <div class="doc-topic">
+                                            <h3 id={`${section.id}-${topic.id}`}>
+                                                <a href={`#${section.id}-${topic.id}`}>{topic.title}</a>
+                                            </h3>
+                                            {topic.paragraphs.map((text) => <p>{text}</p>)}
+                                            {topic.blocks.map((item) => <Code {...item} copy={copy} />)}
+                                        </div>
+                                    ))}
+                                    {section.tableTitle && <h3>{section.tableTitle}</h3>}
                                     {section.rows && (
                                         <div class="table-scroll">
                                             <table>
