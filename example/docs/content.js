@@ -40,17 +40,17 @@ export function sections(lang) {
             ),
             paragraphs: [
                 t(
-                    'Нужны Node.js ≥20.16 и ESM ("type": "module" в package.json). В Node.js loader подключает .jsx/.tsx через импорт и преобразует синтаксис с помощью esbuild. Для браузера компоненты собираются в обычный JavaScript. Эта документация описывает рабочую версию из checkout или локального архива.',
-                    'Requires Node.js ≥20.16 and ESM ("type": "module" in package.json). In Node.js, the loader handles .jsx/.tsx imports and transforms syntax with esbuild. For the browser, bundle components into ordinary JavaScript. These docs describe the working version from this checkout or a local tarball.',
+                    'Нужны Node.js ≥20.16 и ESM ("type": "module" в package.json). В Node.js loader подключает .jsx/.tsx через импорт и преобразует синтаксис с помощью esbuild. Для браузера компоненты собираются в обычный JavaScript.',
+                    'Requires Node.js ≥20.16 and ESM ("type": "module" in package.json). In Node.js, the loader handles .jsx/.tsx imports and transforms syntax with esbuild. For the browser, bundle components into ordinary JavaScript.',
                 ),
                 t(
-                    'Для существующего опубликованного API: npm install jtsx-loader@0.1.18. Чтобы попробовать новый API, выполните npm pack в этом репозитории и установите созданный .tgz в свой проект. Номер архива пока остаётся 0.1.18; это локальная сборка, не новый npm-релиз.',
-                    'For the existing published API: npm install jtsx-loader@0.1.18. To try the new API, run npm pack in this repository and install the generated .tgz in your project. Its version is still 0.1.18; it is a local build, not a new npm release.',
+                    'Установите пакет из npm в своём проекте. Этот быстрый старт работает с опубликованной версией 0.1.18 и не требует флага --import. String() получает HTML как из текущей строки, так и из HTML-значения следующей версии.',
+                    'Install the package from npm in your project. This quick start works with the published 0.1.18 release without an --import flag. String() reads HTML from both the current string result and the next version’s HTML value.',
                 ),
             ],
             blocks: [
                 block(
-                    'npm pack\n# In your consumer project:\nnpm install /path/to/jtsx-loader-0.1.18.tgz',
+                    'npm install jtsx-loader',
                     'bash',
                 ),
                 block('{\n  "type": "module"\n}', 'json', 'package.json'),
@@ -69,8 +69,8 @@ export function sections(lang) {
             ),
             paragraphs: [
                 t(
-                    'import { renderToString } from "jtsx-loader" также регистрирует загрузчик. После регистрации загружайте .jsx/.tsx через await import(). Статический import шаблона в том же стартовом файле выполняется слишком рано — даже если написан ниже регистрации.',
-                    'Importing renderToString from "jtsx-loader" also registers the loader. Load .jsx/.tsx with await import() afterwards. A static template import in the same entry file is linked too early, even if written below registration.',
+                    'В npm 0.1.18 используйте import "jtsx-loader", как в быстром старте. Следующий релиз также добавляет renderToString и register.js из примеров ниже. После регистрации загружайте .jsx/.tsx через await import(). Статический import шаблона в том же стартовом файле выполняется слишком рано — даже если написан ниже регистрации.',
+                    'With npm 0.1.18, use import "jtsx-loader" as in the quick start. The next release also adds renderToString and register.js shown below. Load .jsx/.tsx with await import() afterwards. A static template import in the same entry file is linked too early, even if written below registration.',
                 ),
                 t(
                     'Чтобы оставить статические импорты в server.js, используйте отдельный bootstrap. Вариант node --import jtsx-loader server.js тоже продолжает работать. Для функций без регистрации используйте jtsx-loader/runtime.js; этот путь нужен внутри jtsx.config.js, чтобы избежать цикла загрузки.',
@@ -93,6 +93,10 @@ export function sections(lang) {
                 'One JSX component for frontend and backend.',
             ),
             paragraphs: [
+                t(
+                    'Точки входа browser.js и browserAsync.js относятся к следующему релизу (Unreleased). В опубликованной npm-версии 0.1.18 их пока нет.',
+                    'The browser.js and browserAsync.js entries belong to the next release (Unreleased). The published npm 0.1.18 package does not include them yet.',
+                ),
                 t(
                     'Counter.jsx из быстрого старта уже отрендерен на сервере прямо ниже. Клиентская сборка импортирует тот же файл и обновляет его в браузере. Нажмите кнопку: счётчик меняется без запроса к серверу и без React.',
                     'Counter.jsx from the quick start is already server-rendered below. The client bundle imports the same file and updates it in the browser. Click the button: the counter changes without a server request or React.',

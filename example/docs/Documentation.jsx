@@ -138,11 +138,11 @@ export default ({ lang = 'ru' }) => {
                         </p>
                         <div class="sidebar-note">
                             <span class="status-dot" />
-                            Unreleased
+                            npm · 0.1.18
                             <p>
                                 {ru
-                                    ? 'Новый API из checkout.'
-                                    : 'New API from this checkout.'}
+                                    ? 'Установка: npm install jtsx-loader'
+                                    : 'Install: npm install jtsx-loader'}
                             </p>
                         </div>
                     </aside>
@@ -194,8 +194,8 @@ export default ({ lang = 'ru' }) => {
                             <strong>Unreleased</strong>
                             <span>
                                 {ru
-                                    ? 'Документация рабочей версии. Новые примеры доступны из checkout или локального архива; в npm 0.1.18 их ещё нет.'
-                                    : 'Documentation for the working version. New examples are available from this checkout or a local tarball, ahead of npm 0.1.18.'}
+                                    ? 'Быстрый старт работает с пакетом из npm. Новые raw, renderToString, register.js и browser.js / browserAsync.js описаны для следующего релиза; в npm 0.1.18 их ещё нет.'
+                                    : 'The quick start works with the npm package. New raw, renderToString, register.js and browser.js / browserAsync.js APIs describe the next release; npm 0.1.18 does not include them yet.'}
                             </span>
                         </div>
                         <div id="sections">

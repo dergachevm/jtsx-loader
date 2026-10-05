@@ -16,7 +16,7 @@ test('documentation examples run without a preload and generate escaped static H
             assert.ok(html.includes('<output aria-live="polite">3</output>'));`,
     });
     expectSuccess(result);
-    assert.match(result.stdout, /&lt;Hello&gt;/);
+    assert.match(result.stdout, /<h1>Hello JSX<\/h1>/);
 });
 
 test('documented async config and JSON script escaping execute correctly', (t) => {

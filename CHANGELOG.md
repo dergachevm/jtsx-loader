@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Use `npm install jtsx-loader` as the documented installation path. Keep the quick start compatible with the published 0.1.18 release and distinguish upcoming APIs.
+
 ### Universal JSX without React
 
 - Make JSX/TSX imports in Node.js and shared frontend/backend components the main documentation focus. Move escaping to the API reference rather than presenting it as the product's headline.

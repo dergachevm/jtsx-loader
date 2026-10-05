@@ -4,7 +4,7 @@
 
 The Node loader transforms JSX/TSX with esbuild when importing a template. For the browser, compile the same components into JavaScript with your bundler. Neither environment needs React or ReactDOM.
 
-> Documentation for the **Unreleased working version**. New APIs are available from this checkout or a local tarball, ahead of npm 0.1.18. See [migration](#migration-from-0118) when updating.
+Install from [npm](https://www.npmjs.com/package/jtsx-loader). The quick start below works with the published `0.1.18` release. Sections using `raw`, `renderToString`, `register.js` or the browser entries describe the **next, unreleased version**. See [migration](#migration-from-0118) when updating.
 
 ## Requirements and installation
 
@@ -12,18 +12,9 @@ The Node loader transforms JSX/TSX with esbuild when importing a template. For t
 - ESM: `"type": "module"` in `package.json`.
 - No React dependency. Express/Fastify are optional, separately installed integrations.
 
-For the existing released API: `npm install jtsx-loader@0.1.18`. To use the **new API in this README**, install a local build:
-
 ```sh
-# In this checkout:
-npm install
-npm pack
-
-# In your consumer project (replace the path):
-npm install /path/to/jtsx-loader-0.1.18.tgz
+npm install jtsx-loader
 ```
-
-The tarball still carries version `0.1.18`; it is a local preview, not a new published release.
 
 ## Quick start — no command-line flag
 
@@ -41,15 +32,19 @@ export default ({ title }) => <main>
 Create `app.js`:
 
 ```js
-import { renderToString } from 'jtsx-loader';
+import 'jtsx-loader';
 
 const { default: Page } = await import('./Page.jsx');
-console.log(renderToString(Page({ title: 'Hello JSX' })));
+console.log(String(Page({ title: 'Hello JSX' })));
 ```
 
 Run `node app.js`. The template renders to HTML using ordinary functions; React is not involved.
 
-Importing the package root registers the loader and exports `raw` and `renderToString`. The registration must complete **before** importing templates. A static `import Page from './Page.jsx'` in the same entry file is linked too early, regardless of its position.
+Importing the package root registers the loader. The registration must complete **before** importing templates. A static `import Page from './Page.jsx'` in the same entry file is linked too early, regardless of its position. The published version returns HTML strings; `String(...)` also supports the next version's HTML values.
+
+## Additional registration and serialization APIs (Unreleased)
+
+The next version also exports `raw` and `renderToString` from the package root and adds `register.js` for explicit registration.
 
 To keep static imports in a server module, use a bootstrap:
 
@@ -68,6 +63,8 @@ node --import jtsx-loader server.js
 `jtsx-loader/runtime.js` exports the helpers without registering hooks. Use this path in configuration and tools that only need serialization. Do not import the package root from `jtsx.config.js`: registration is waiting for that configuration and would create a loading cycle.
 
 ## The same factory in the browser
+
+**Unreleased:** the browser entries below are not included in npm `0.1.18` yet.
 
 Use `jtsx-loader/browser.js` for client-side JSX/TSX. It contains the same HTML serializer as the Node factory, without filesystem access, hook registration or Node polyfills. It exports `_jsx`, `_jsxFragment`, `_jsxUtils`, `raw`, `renderToString` and `createFactory(options)`.
 
