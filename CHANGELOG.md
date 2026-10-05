@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Use `npm install jtsx-loader` as the documented installation path. Keep the quick start compatible with the published 0.1.18 release and distinguish upcoming APIs.
+- Use `npm install jtsx-loader` as the documented installation path. Include setup for a new project with `npm init -y` and ESM configuration, alongside installation in an existing project.
 
 ### Universal JSX without React
 
@@ -31,9 +31,7 @@
 - Rewrite README and configuration examples for safe defaults, raw HTML, output boundaries, source registration, async rendering and migration from 0.1.18.
 - Replace outdated English/Russian demo pages with a shared 12-section documentation site on the existing `/` and `/ru` routes. Add responsive navigation, content search, light/dark themes, accessible controls and code copying.
 - Add server-side Shiki syntax highlighting for JSX/TSX, JS/TS, JSON, HTML, CSS, Bash and PowerShell, with a plain-text fallback. Shiki is development-only; the runtime still depends only on esbuild.
-- Share executable examples across translations; test source preservation, JSON script escaping, no-flag startup and static generation. Mark the new API as Unreleased, distinct from npm 0.1.18.
-
-No version bump, npm publication or website deployment in this change.
+- Share executable examples across translations; test source preservation, JSON script escaping, no-flag startup and static generation.
 
 ## 0.1.18 — 2026-10-05
 

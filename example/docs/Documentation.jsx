@@ -138,7 +138,7 @@ export default ({ lang = 'ru' }) => {
                         </p>
                         <div class="sidebar-note">
                             <span class="status-dot" />
-                            npm · 0.1.18
+                            npm
                             <p>
                                 {ru
                                     ? 'Установка: npm install jtsx-loader'
@@ -189,14 +189,6 @@ export default ({ lang = 'ru' }) => {
                                 </span>
                                 <span>Node.js + Browser</span>
                             </div>
-                        </div>
-                        <div class="release-note">
-                            <strong>Unreleased</strong>
-                            <span>
-                                {ru
-                                    ? 'Быстрый старт работает с пакетом из npm. Новые raw, renderToString, register.js и browser.js / browserAsync.js описаны для следующего релиза; в npm 0.1.18 их ещё нет.'
-                                    : 'The quick start works with the npm package. New raw, renderToString, register.js and browser.js / browserAsync.js APIs describe the next release; npm 0.1.18 does not include them yet.'}
-                            </span>
                         </div>
                         <div id="sections">
                             {content.map((section, index) => (

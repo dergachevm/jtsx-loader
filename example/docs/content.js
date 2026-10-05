@@ -44,16 +44,21 @@ export function sections(lang) {
                     'Requires Node.js ≥20.16 and ESM ("type": "module" in package.json). In Node.js, the loader handles .jsx/.tsx imports and transforms syntax with esbuild. For the browser, bundle components into ordinary JavaScript.',
                 ),
                 t(
-                    'Установите пакет из npm в своём проекте. Этот быстрый старт работает с опубликованной версией 0.1.18 и не требует флага --import. String() получает HTML как из текущей строки, так и из HTML-значения следующей версии.',
-                    'Install the package from npm in your project. This quick start works with the published 0.1.18 release without an --import flag. String() reads HTML from both the current string result and the next version’s HTML value.',
+                    'Если проект уже есть, установите пакет из npm и включите ESM. Если проекта ещё нет, выберите вариант «Новый проект»: создайте папку, выполните npm init -y и установите пакет. Это альтернативные варианты — выберите один, затем создайте файлы примера в папке проекта.',
+                    'If you already have a project, install the package from npm and enable ESM. Otherwise, use the “New project” option: create a directory, run npm init -y and install the package. Choose one of these alternatives, then create the example files in your project directory.',
                 ),
             ],
             blocks: [
                 block(
-                    'npm install jtsx-loader',
+                    'npm install jtsx-loader\nnpm pkg set type=module',
                     'bash',
+                    t('Существующий проект', 'Existing project'),
                 ),
-                block('{\n  "type": "module"\n}', 'json', 'package.json'),
+                block(
+                    'mkdir my-jtsx-app\ncd my-jtsx-app\nnpm init -y\nnpm pkg set type=module\nnpm install jtsx-loader',
+                    'bash',
+                    t('Новый проект', 'New project'),
+                ),
                 sample('Counter.jsx'),
                 sample('Page.jsx'),
                 sample('app.js'),
@@ -69,8 +74,8 @@ export function sections(lang) {
             ),
             paragraphs: [
                 t(
-                    'В npm 0.1.18 используйте import "jtsx-loader", как в быстром старте. Следующий релиз также добавляет renderToString и register.js из примеров ниже. После регистрации загружайте .jsx/.tsx через await import(). Статический import шаблона в том же стартовом файле выполняется слишком рано — даже если написан ниже регистрации.',
-                    'With npm 0.1.18, use import "jtsx-loader" as in the quick start. The next release also adds renderToString and register.js shown below. Load .jsx/.tsx with await import() afterwards. A static template import in the same entry file is linked too early, even if written below registration.',
+                    'Импорт "jtsx-loader" регистрирует загрузчик; из того же модуля можно импортировать raw и renderToString. Для явной регистрации используйте register.js, как в примере ниже. После регистрации загружайте .jsx/.tsx через await import(). Статический import шаблона в том же стартовом файле выполняется слишком рано — даже если написан ниже регистрации.',
+                    'Importing "jtsx-loader" registers the loader; the same module exports raw and renderToString. For explicit registration, use register.js as shown below. Load .jsx/.tsx with await import() afterwards. A static template import in the same entry file is linked too early, even if written below registration.',
                 ),
                 t(
                     'Чтобы оставить статические импорты в server.js, используйте отдельный bootstrap. Вариант node --import jtsx-loader server.js тоже продолжает работать. Для функций без регистрации используйте jtsx-loader/runtime.js; этот путь нужен внутри jtsx.config.js, чтобы избежать цикла загрузки.',
@@ -93,10 +98,6 @@ export function sections(lang) {
                 'One JSX component for frontend and backend.',
             ),
             paragraphs: [
-                t(
-                    'Точки входа browser.js и browserAsync.js относятся к следующему релизу (Unreleased). В опубликованной npm-версии 0.1.18 их пока нет.',
-                    'The browser.js and browserAsync.js entries belong to the next release (Unreleased). The published npm 0.1.18 package does not include them yet.',
-                ),
                 t(
                     'Counter.jsx из быстрого старта уже отрендерен на сервере прямо ниже. Клиентская сборка импортирует тот же файл и обновляет его в браузере. Нажмите кнопку: счётчик меняется без запроса к серверу и без React.',
                     'Counter.jsx from the quick start is already server-rendered below. The client bundle imports the same file and updates it in the browser. Click the button: the counter changes without a server request or React.',
@@ -490,8 +491,8 @@ export function sections(lang) {
                     'For gradual migration, enable both legacy defaults below. This mode returns the old strings, so send the result directly as before: renderToString treats a plain string as text. Disabling escaping is not recommended for new projects.',
                 ),
                 t(
-                    'В этом обновлении сохранены прежние deep-import пути, регистрация через --import, конфигурация, async-фабрика и ?reload. Пакет и сайт ещё не опубликованы. Полный changelog находится в репозитории.',
-                    'This update retains existing deep-import paths, --import registration, configuration, the async factory and ?reload. The package and site have not been published. The complete changelog lives in the repository.',
+                    'В этом обновлении сохранены прежние deep-import пути, регистрация через --import, конфигурация, async-фабрика и ?reload. Полный changelog находится в репозитории.',
+                    'This update retains existing deep-import paths, --import registration, configuration, the async factory and ?reload. The complete changelog lives in the repository.',
                 ),
             ],
             blocks: [
