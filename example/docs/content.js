@@ -201,8 +201,12 @@ export function sections(lang) {
             ),
             paragraphs: [
                 t(
-                    'className всегда становится class. Для других React-имён по умолчанию выводится предупреждение; rewriteReactAttrs: true включает замену. style принимает строку или объект с нативными CSS-именами. style={null} пропускается.',
-                    'className always becomes class. Other React-style names warn by default; rewriteReactAttrs: true enables replacement. style accepts a string or an object with native CSS names. style={null} is omitted.',
+                    'Используйте обычный class прямо в JSX/TSX: <div class="card">. className не нужен — это работает без дополнительных настроек и на сервере, и в браузере. Для совместимости className тоже поддерживается и всегда преобразуется в class.',
+                    'Use ordinary class directly in JSX/TSX: <div class="card">. You do not need className or extra configuration, on either the server or the browser. For compatibility, className is also supported and always becomes class.',
+                ),
+                t(
+                    'Для других React-имён по умолчанию выводится предупреждение; rewriteReactAttrs: true включает замену. style принимает строку или объект с нативными CSS-именами. style={null} пропускается.',
+                    'Other React-style names warn by default; rewriteReactAttrs: true enables replacement. style accepts a string or an object with native CSS names. style={null} is omitted.',
                 ),
                 t(
                     'true сериализуется как "true", false пропускается, null становится "null", undefined создаёт атрибут без значения. Поэтому aria-expanded={false} нужно записывать строкой "false". Функции в атрибутах пропускаются с предупреждением.',
@@ -215,7 +219,7 @@ export function sections(lang) {
             ],
             blocks: [
                 block(
-                    `<label className="field" for="name">Name</label>\n<input id="name" value={'"<&'} disabled={true} />\n<div style={{ color: 'red', '--gap': '8px' }} />`,
+                    `<label class="field" for="name">Name</label>\n<input id="name" value={'"<&'} disabled={true} />\n<div style={{ color: 'red', '--gap': '8px' }} />`,
                 ),
                 block(
                     `import { escapeHtml } from 'jtsx-loader/factory/jsxUtils.js';\nexport default {\n    attributeParser: {\n        ac: (name, value) =>\n            \`data-\${name.replaceAll(':', '-')}="\${escapeHtml(value)}"\`,\n    },\n};`,
@@ -483,11 +487,29 @@ export function sections(lang) {
                 'Новые defaults меняют публичный контракт.',
                 'The new defaults change the public contract.',
             ),
-            paragraphs: [
+            steps: [
                 t(
-                    '1. Замените передачу результата напрямую в HTTP/файл на renderToString(await Page(props)). 2. Уберите ручной escapeHtml у обычных children и атрибутов. 3. Замените намеренную HTML-строку в children на raw(html). 4. Не склеивайте дочерний JSX через join()/шаблонные строки до рендера. 5. Учитывайте отсутствие неявных пробелов и сохранение нуля.',
-                    '1. Replace direct HTTP/file output with renderToString(await Page(props)). 2. Remove manual escapeHtml calls for ordinary children and attributes. 3. Wrap intentional HTML strings in raw(html). 4. Do not join/interpolate child JSX into strings before rendering. 5. Account for no implicit spaces and preserved zero.',
+                    'Замените передачу результата напрямую в HTTP/файл на renderToString(await Page(props)).',
+                    'Replace direct HTTP/file output with renderToString(await Page(props)).',
                 ),
+                t(
+                    'Уберите ручной escapeHtml у обычных children и атрибутов.',
+                    'Remove manual escapeHtml calls for ordinary children and attributes.',
+                ),
+                t(
+                    'Замените намеренную HTML-строку в children на raw(html).',
+                    'Wrap intentional HTML strings in raw(html).',
+                ),
+                t(
+                    'Не склеивайте дочерний JSX через join()/шаблонные строки до рендера.',
+                    'Do not join/interpolate child JSX into strings before rendering.',
+                ),
+                t(
+                    'Учитывайте отсутствие неявных пробелов и сохранение нуля.',
+                    'Account for no implicit spaces and preserved zero.',
+                ),
+            ],
+            paragraphs: [
                 t(
                     'Для поэтапного перехода включите оба старых defaults. Этот режим возвращает прежние строки, поэтому отдавайте результат напрямую, как раньше: renderToString считает обычную строку текстом. Отключать экранирование для новых проектов не рекомендуется.',
                     'For gradual migration, enable both legacy defaults below. This mode returns the old strings, so send the result directly as before: renderToString treats a plain string as text. Disabling escaping is not recommended for new projects.',

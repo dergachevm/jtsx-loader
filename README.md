@@ -219,7 +219,9 @@ node app.js
 
 Configurations can execute in separate Node contexts; avoid side effects and do not assume one evaluation per process.
 
-Native HTML attribute names are preferred. `style` accepts a string or an object with native CSS names; `style={null}` is omitted. Attributes serialize `true` as `"true"`, omit `false`, serialize `null` as `"null"`, and render `undefined` as a bare attribute. Use strings for values such as `aria-expanded="false"`. Function-valued attributes are ignored with a warning; no browser listeners are installed.
+Use native HTML attribute names directly in JSX/TSX, including `class`: `<div class="card">`. No `className` or extra configuration is needed, on either the server or the browser. `className` is also supported for compatibility and always becomes `class`.
+
+`style` accepts a string or an object with native CSS names; `style={null}` is omitted. Attributes serialize `true` as `"true"`, omit `false`, serialize `null` as `"null"`, and render `undefined` as a bare attribute. Use strings for values such as `aria-expanded="false"`. Function-valued attributes are ignored with a warning; no browser listeners are installed.
 
 Custom parsers return a **trusted HTML fragment** and must escape values themselves:
 
@@ -322,7 +324,7 @@ npm run dev
 npm start -- --write-html
 ```
 
-Open [English documentation](http://localhost:3001/) or [русскую документацию](http://localhost:3001/ru). The existing routes remain. The site includes navigation, content search, light/dark themes, code copying and server-side [Shiki highlighting](https://shiki.style/guide/install); no CDN or external API is needed to render pages. Shiki is a **dev dependency**, not part of the loader runtime.
+Open [English documentation](http://localhost:3001/) or [русскую документацию](http://localhost:3001/ru). The existing routes remain. The site includes navigation, content search, light/dark themes, code copying and server-side syntax highlighting; no CDN or external API is needed to render pages. The highlighter is a development dependency, not part of the loader runtime.
 
 Executable examples are shared by both languages. `npm start` registers hooks from code without `--import`; `npm run dev` restarts the process on changes. Requested pages are only saved to `build/` with `--write-html`.
 

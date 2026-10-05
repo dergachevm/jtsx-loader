@@ -340,6 +340,25 @@ h2 a:hover:after {
 .installation-options {
     margin: 22px 0;
 }
+.doc-section ol,
+.doc-section ul {
+    display: block;
+    padding-left: 1.6em;
+    margin: 20px 0;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.85;
+    overflow-wrap: anywhere;
+}
+.doc-section li {
+    display: list-item;
+    margin: 10px 0;
+    padding-left: 5px;
+}
+.doc-section li::marker {
+    color: var(--accent);
+    font-weight: 600;
+}
 .installation-tabs {
     display: flex;
     gap: 4px;

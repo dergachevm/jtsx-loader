@@ -210,6 +210,11 @@ export default ({ lang = 'ru' }) => {
                                         </a>
                                     </h2>
                                     <p class="section-intro">{section.intro}</p>
+                                    {section.steps && (
+                                        <ol>
+                                            {section.steps.map((step) => <li>{step}</li>)}
+                                        </ol>
+                                    )}
                                     {section.paragraphs.map((text) => (
                                         <p>{text}</p>
                                     ))}
@@ -308,12 +313,6 @@ export default ({ lang = 'ru' }) => {
                                 {ru ? 'Сообщить об ошибке' : 'Report an issue'}{' '}
                                 ↗
                             </a>
-                            <span>
-                                {ru ? 'Подсветка' : 'Highlighting'}:{' '}
-                                <a href="https://shiki.style/guide/install">
-                                    Shiki
-                                </a>
-                            </span>
                         </footer>
                     </main>
                 </div>
