@@ -1,5 +1,10 @@
 import test from 'node:test';
-import { runFixture, expectSuccess } from './helpers/fixture.mjs';
+import { runFixture as run, expectSuccess } from './helpers/fixture.mjs';
+
+// Explicit migration mode preserves the old string-returning contract.
+const runFixture = (t, options) => run(t, { ...options, config: options.config
+    ? options.config.replace('export default {', 'export default { escapeChildren: false, escapeAttributes: false,')
+    : 'export default { escapeChildren: false, escapeAttributes: false };' });
 
 // Compatibility baseline: 0.1.15 / 71dd852, plans/COMPATIBILITY.md K2.
 // Do not regenerate these expectations from the implementation under test.

@@ -6,8 +6,10 @@ export default {
     // true: inject even with {} / minify; false: templates import their factory.
     injectFactory: 'legacy',
 
-    // Enable for ordinary, not pre-escaped attribute values. Children stay raw.
-    escapeAttributes: false,
+    // Unreleased defaults: original text/attribute data is escaped automatically.
+    // Set BOTH to false only to restore the 0.1.18 raw/string-returning mode.
+    escapeChildren: true,
+    escapeAttributes: true,
 
     // When true disables warnings when uses React camelCase attributes, like htmlFor instead of for xLinkHref instead of xlink:href
     disableAttrWarnings: false,
@@ -19,7 +21,7 @@ export default {
     esbuildTransformConfig: undefined,
 
     // Set injectFactory: true and switch this path to factory/asyncFactory.js
-    // to await nested components. That mode requires await Page(props).
+    // to await nested components. Output with renderToString(await Page(props)).
     importFactory: `import { _jsx, _jsxFragment, _jsxUtils } from 'jtsx-loader/factory/jsxFactory.js';`,
 
     // Custom parsers return trusted raw fragments. Escape each value yourself.

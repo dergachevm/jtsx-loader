@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+### Breaking: escaped output by default
+
+- Default `escapeChildren` and `escapeAttributes` to `true`. Ordinary text and attribute values are escaped; intentional HTML uses the new `raw(value)` helper. `raw()` is not an HTML sanitizer and does not bypass attribute escaping.
+- Native tags/fragments return immutable trusted HTML objects instead of strings; nested JSX retains its markup identity, including across `?reload`. Use `renderToString(await Page(props))` at HTTP/file boundaries. It escapes plain strings and rejects unawaited Promises/unsupported objects.
+- Normalize default children recursively without implicit spaces, omit null/undefined/booleans and preserve zero/bigint. `__raw` and `__escape` remain supported and preserve zero in the new mode.
+- Both factories follow the new policy. The async factory returns `Promise<Html>`, resolves siblings concurrently and propagates nested errors.
+- Preserve the old behavior with explicit `escapeChildren: false, escapeAttributes: false`. Compatibility tests keep the original expected strings under those settings. In legacy mode, send returned strings directly without `renderToString()`.
+
+### Added
+
+- Export `raw` and `renderToString` from the package root; add side-effect-free `runtime.js` for configuration and serialization tools.
+- Add `register.js` for a source bootstrap: `import 'jtsx-loader/register.js'; await import('./server.js')`. Root imports also register the loader. The `--import jtsx-loader` path remains supported; registration is idempotent within a realm.
+- Enable package self-imports with a root export and a wildcard preserving existing deep paths.
+- Start the documentation demo from JavaScript without a CLI preload.
+
+### Documentation
+
+- Rewrite README and configuration examples for safe defaults, raw HTML, output boundaries, source registration, async rendering and migration from 0.1.18.
+- Replace outdated English/Russian demo pages with a shared 12-section documentation site on the existing `/` and `/ru` routes. Add responsive navigation, content search, light/dark themes, accessible controls and code copying.
+- Add server-side Shiki syntax highlighting for JSX/TSX, JS/TS, JSON, HTML, CSS, Bash and PowerShell, with a plain-text fallback. Shiki is development-only; the runtime still depends only on esbuild.
+- Share executable examples across translations; test source preservation, JSON script escaping, no-flag startup and static generation. Mark the new API as Unreleased, distinct from npm 0.1.18.
+
+No version bump, npm publication or website deployment in this change.
+
 ## 0.1.18 — 2026-10-05
 
 - Update README and the configuration example to describe published features, configuration and async rendering.

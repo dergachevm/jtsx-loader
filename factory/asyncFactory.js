@@ -1,4 +1,5 @@
-import { _jsx as renderTag, _jsxUtils } from './jsxFactory.js';
+import { _jsx as renderTag, _jsxUtils, escapeChildren } from './jsxFactory.js';
+import { isHtml, raw, renderToString } from '../runtime.js';
 
 async function resolveChildren(children) {
     // Attach handlers to all siblings (and nested arrays) immediately. Waiting
@@ -8,7 +9,7 @@ async function resolveChildren(children) {
         const value = await child;
         if (Array.isArray(value)) return resolveChildren(value);
         if (value == null || typeof value === 'boolean') return [];
-        if (['string', 'number', 'bigint'].includes(typeof value)) return [value];
+        if (isHtml(value) || ['string', 'number', 'bigint'].includes(typeof value)) return [value];
         throw new TypeError('[jtsx-loader] Unsupported child value; render objects to text explicitly');
     }));
     return resolved.flat();
@@ -18,20 +19,22 @@ async function _jsx(tagName, attrs, ...children) {
     const resolved = await resolveChildren(children);
     if (typeof tagName === 'function') {
         const result = tagName({ ...attrs, children: resolved.length === 1 ? resolved[0] : resolved });
-        return (await resolveChildren([result])).join('');
+        const content = await resolveChildren([result]);
+        return escapeChildren ? raw(renderToString(content)) : content.join('');
     }
 
     const attributes = { ...attrs };
     for (const name of ['__raw', '__escape']) {
         if (attributes[name] != null) attributes[name] = String(attributes[name]);
     }
-    // Reuse the legacy HTML/attribute serializer without altering its API.
-    // Joining here implements the new mode's explicit-whitespace policy.
-    return renderTag(tagName, attributes, resolved.join(''));
+    // Keep trusted JSX objects intact until the native tag serializes them.
+    // Legacy mode still joins without the synchronous factory's array spaces.
+    return renderTag(tagName, attributes, ...(escapeChildren ? resolved : [resolved.join('')]));
 }
 
 async function _jsxFragment({ children }) {
-    return (await resolveChildren([children])).join('');
+    const content = await resolveChildren([children]);
+    return escapeChildren ? raw(renderToString(content)) : content.join('');
 }
 
 export { _jsx, _jsxFragment, _jsxUtils };

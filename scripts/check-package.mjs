@@ -32,6 +32,7 @@ try {
         'loader/hooks.mjs', 'loader/sync-loader.mjs',
         'factory/jsxFactory.js', 'factory/asyncFactory.js', 'factory/jsxUtils.js',
         'factory/utils.js', 'factory/possibleAttributes.js', 'package.json',
+        'runtime.js', 'register.js',
         'example/server.js', 'example/pages/index.jsx', 'example/pages/ru.jsx', 'example/pages/test.jsx',
         'jtsx.config.example.js', 'README.md', 'CHANGELOG.md',
     ]) assert.ok(files.has(file), `Missing package file: ${file}`);
@@ -46,14 +47,16 @@ try {
         import path from 'node:path';
         import { fileURLToPath } from 'node:url';
         import Page from './Page.tsx';
+        import { raw, renderToString } from 'jtsx-loader';
         import { _jsx } from 'jtsx-loader/factory/jsxFactory.js';
         import { _jsx as asyncJSX } from 'jtsx-loader/factory/asyncFactory.js';
         import { escapeHtml } from 'jtsx-loader/factory/jsxUtils.js';
         import * as oldUtils from 'jtsx-loader/factory/utils.js';
         import oldAttributes from 'jtsx-loader/factory/possibleAttributes.js';
-        assert.equal(Page({ title: '<Hello>' }), '<h1>&lt;Hello&gt;</h1>');
-        assert.equal(_jsx('p', null, 'old'), '<p>old</p>');
-        assert.equal(await asyncJSX('p', null, Promise.resolve('new')), '<p>new</p>');
+        assert.equal(renderToString(Page({ title: '<Hello>' })), '<h1>&lt;Hello&gt;</h1>');
+        assert.equal(renderToString(_jsx('p', null, '<b>text</b>')), '<p>&lt;b&gt;text&lt;&#x2F;b&gt;</p>');
+        assert.equal(renderToString(_jsx('p', null, raw('<b>html</b>'))), '<p><b>html</b></p>');
+        assert.equal(renderToString(await asyncJSX('p', null, Promise.resolve('new'))), '<p>new</p>');
         assert.equal(escapeHtml('<'), '&lt;');
         assert.ok(Object.keys(oldUtils).length && Object.keys(oldAttributes).length);
         for (const name of ['jtsx-loader', 'esbuild']) {
@@ -63,15 +66,25 @@ try {
         }
     `);
     run(['--import', 'jtsx-loader', 'app.mjs']);
+    fixture.write('bootstrap.mjs', `import 'jtsx-loader/register.js'; await import('./app.mjs');`);
+    run(['bootstrap.mjs']);
+    fixture.write('direct.mjs', `import { renderToString } from 'jtsx-loader';
+        const { default: Page } = await import('./Page.tsx');
+        if (renderToString(Page({ title: '<x>' })) !== '<h1>&lt;x&gt;</h1>') throw new Error('direct registration failed');`);
+    run(['direct.mjs']);
     fixture.write('jtsx.config.js', `export default {
         injectFactory: true, escapeAttributes: true,
         esbuildTransformConfig: { minify: true },
         importFactory: "import { _jsx, _jsxFragment, _jsxUtils } from 'jtsx-loader/factory/asyncFactory.js';"
     };`);
     fixture.write('Async.jsx', `const Child = async () => <b>nested</b>; export default () => <main><Child />{Promise.resolve(0)}</main>;`);
-    fixture.write('async-app.mjs', `import assert from 'node:assert/strict'; import Page from './Async.jsx'; assert.equal(await Page(), '<main><b>nested</b>0</main>');`);
+    fixture.write('async-app.mjs', `import assert from 'node:assert/strict'; import Page from './Async.jsx'; import { renderToString } from 'jtsx-loader/runtime.js'; assert.equal(renderToString(await Page()), '<main><b>nested</b>0</main>');`);
     run(['--import', 'jtsx-loader', 'async-app.mjs']);
-    console.log('Installed tarball: legacy and async --import, TSX, deep paths and local esbuild passed');
+    fixture.write('jtsx.config.js', `export default { escapeChildren: false, escapeAttributes: false };`);
+    fixture.write('legacy.mjs', `import assert from 'node:assert/strict'; import { _jsx } from 'jtsx-loader/factory/jsxFactory.js';
+        assert.equal(_jsx('p', null, '<b>old</b>'), '<p><b>old</b></p>');`);
+    run(['--import', 'jtsx-loader', 'legacy.mjs']);
+    console.log('Installed tarball: escaping, raw, no-flag registration, async, legacy, TSX and deep paths passed');
 } finally {
     for (const cleanup of cleanups) cleanup();
 }

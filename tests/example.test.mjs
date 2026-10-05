@@ -41,11 +41,13 @@ async function startExample(t, { writeHTML = false, broken = false, dev = false 
             } else child.kill('SIGTERM');
             await until(() => child.exitCode !== null || child.signalCode !== null, () => 'stopping example');
         }
-        fs.unlinkSync(path.join(fixture.root, 'node_modules/express'));
+        for (const name of ['express', 'shiki']) fs.unlinkSync(path.join(fixture.root, 'node_modules', name));
         for (const cleanup of cleanups) cleanup();
     });
     fs.symlinkSync(path.join(repository, 'node_modules/express'),
         path.join(fixture.root, 'node_modules/express'), process.platform === 'win32' ? 'junction' : 'dir');
+    fs.symlinkSync(path.join(repository, 'node_modules/shiki'),
+        path.join(fixture.root, 'node_modules/shiki'), process.platform === 'win32' ? 'junction' : 'dir');
     fs.cpSync(path.join(repository, 'example'), path.join(fixture.root, 'example'), { recursive: true });
     fixture.write('package.json', JSON.stringify({ private: true, type: 'module', version: 'fixture' }));
     if (broken) fixture.write('example/pages/test.jsx', `export default () => { throw new Error('render-sentinel'); };`);

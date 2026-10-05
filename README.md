@@ -1,146 +1,129 @@
 # jtsx-loader
 
-Import `.jsx` and `.tsx` files in Node.js and render HTML with ordinary functions. Templates are transpiled with esbuild; no browser runtime or hydration is added.
+JSX and TSX templates for Node.js. Render HTML with ordinary functions, without React, hydration or a browser runtime. Transpiled with esbuild.
 
-## Requirements
+> **Unreleased / breaking change.** This checkout escapes text and ordinary attribute values by default, adds `raw()` and returns trusted JSX objects. Published `0.1.18` does not contain these changes. The package version has not been bumped. See [migration](#migration-from-0118) before updating.
+>
+> **Важно:** новый API ещё не опубликован. Готовую JSX-разметку преобразуйте в строку через `renderToString()` перед HTTP-ответом или записью в файл. Обычные строки теперь считаются текстом.
+
+## Requirements and installation
 
 - Node.js `>=20.16`.
-- ESM: `"type": "module"`.
+- ESM: `"type": "module"` in `package.json`.
+- No React dependency. Express/Fastify are optional, separately installed integrations.
 
-## Quick start
-
-Install the loader:
+For the existing released API: `npm install jtsx-loader@0.1.18`. To use the **new API in this README**, install a local build:
 
 ```sh
-npm install jtsx-loader
+# In this checkout:
+npm install
+npm pack
+
+# In your consumer project (replace the path):
+npm install /path/to/jtsx-loader-0.1.18.tgz
 ```
 
-Set `"type": "module"` in your project's `package.json`. Create `Page.jsx`:
+The tarball still carries version `0.1.18`; it is a local preview, not a new published release.
+
+## Quick start — no command-line flag
+
+Create `Page.jsx`:
 
 ```jsx
-const Child = async () => <strong>Ready</strong>;
+import { raw } from 'jtsx-loader';
 
-export default async ({ message }) => <main>
-    <h1 __escape={message}></h1>
-    {await Child()}
+const Badge = ({ children }) => <strong>{children}</strong>;
+
+export default ({ title }) => <main>
+    <h1>{title}</h1>
+    <Badge>Ready</Badge>
+    <p>{raw('<em>Trusted HTML</em>')}</p>
 </main>;
 ```
 
 Create `app.js`:
 
 ```js
-import Page from './Page.jsx';
+import { renderToString } from 'jtsx-loader';
 
-console.log(await Page({ message: '<Hello>' }));
+const { default: Page } = await import('./Page.jsx');
+console.log(renderToString(Page({ title: '<Hello>' })));
 ```
 
-Run:
+Run `node app.js`. The heading contains literal `<Hello>` text, and the trusted fragment renders as an `em` element.
+
+Importing the package root registers the loader and exports `raw` and `renderToString`. The registration must complete **before** importing templates. A static `import Page from './Page.jsx'` in the same entry file is linked too early, regardless of its position.
+
+To keep static imports in a server module, use a bootstrap:
+
+```js
+// bootstrap.js
+import 'jtsx-loader/register.js';
+await import('./server.js');
+```
+
+Then run `node bootstrap.js`. The original preload still works:
 
 ```sh
-node --import jtsx-loader app.js
+node --import jtsx-loader server.js
 ```
 
-The default factory returns an HTML string synchronously for a native tag. A function component returns its own result, which may be a Promise. **Await nested async components explicitly**, as in `await Child()` above, or select the [async factory](#async-factory) to await them automatically.
-
-For Express SSR, install Express separately and use a fixed route:
-
-```js
-import express from 'express';
-import Page from './Page.jsx';
-
-const app = express();
-app.get('/', async (req, res, next) => {
-    try {
-        res.type('html').send(await Page({ message: 'Hello' }));
-    } catch (error) {
-        next(error);
-    }
-});
-app.listen(3000);
-```
-
-## Configuration
-
-An optional `jtsx.config.js` is loaded from **the process working directory**, not from the template's directory. Export a configuration object. See the commented [configuration example](jtsx.config.example.js).
-
-| Key | Default / behavior |
-| --- | --- |
-| `importFactory` | Imports `_jsx`, `_jsxFragment`, `_jsxUtils` from `jtsx-loader/factory/jsxFactory.js` |
-| `esbuildTransformConfig` | No user options; properties override the loader's esbuild transform options |
-| `injectFactory` | `'legacy'`: inject the factory import when `esbuildTransformConfig` is falsy. `true`: always inject. `false`: import manually in templates |
-| `escapeAttributes` | `false`; set to `true` to escape ordinary attribute values |
-| `attributeParser` | An empty object; callbacks receive `(attribute, value)` by attribute prefix |
-| `disableAttrWarnings` | Warnings enabled; `true` silences React-style attribute warnings |
-| `rewriteReactAttrs` | `false`; `true` rewrites React-style names to HTML names. `className` always becomes `class` |
-
-For example, enable attribute escaping and minification:
-
-```js
-// jtsx.config.js
-export default {
-    injectFactory: true,
-    escapeAttributes: true,
-    esbuildTransformConfig: { minify: true },
-};
-```
-
-Set `injectFactory: true` when supplying `esbuildTransformConfig`, including `{}`, unless templates import the factory themselves. Do not combine a manual import of the same names with `injectFactory: true`.
-
-A missing config uses defaults. If an existing config fails to load, the loader warns with its path and cause, then uses defaults. Set `JTSX_STRICT_CONFIG=1` to fail instead. Set it outside the config, for example in PowerShell:
-
-```powershell
-$env:JTSX_STRICT_CONFIG = '1'
-node --import jtsx-loader app.js
-```
+`jtsx-loader/runtime.js` exports the helpers without registering hooks. Use this path in configuration and tools that only need serialization. Do not import the package root from `jtsx.config.js`: registration is waiting for that configuration and would create a loading cycle.
 
 ## Escaping and trusted HTML
 
-**Both factories treat string children and `__raw` as raw HTML.** Use `__escape` for untrusted text:
+```jsx
+<p>{userText}</p>                 // Escaped text
+<div>{raw(trustedHtml)}</div>      // Explicit HTML insertion
+<p>{userText}{raw('<br>')}Next</p> // Mix text and HTML
+<a title={userText}>Link</a>       // Escaped attribute value
+```
+
+- Ordinary string children and attribute values are escaped by default. Pass original, unescaped data.
+- Native JSX tags and fragments produce immutable trusted HTML objects. Nested JSX keeps its identity and is not escaped again.
+- `raw(value)` creates a trusted HTML object. It does **not** sanitize HTML. Use only trusted or independently sanitized content. Null/undefined become empty HTML; zero becomes `0`. Await Promises before calling it.
+- `renderToString(value)` unwraps trusted HTML, escapes ordinary text, flattens arrays without separators and omits null/undefined/booleans. Numbers and bigint remain. Unsupported objects and unawaited Promises throw.
+- Call `renderToString(await Page(props))` once at the output boundary. Avoid `String(child)`, string interpolation or `.join()` while composing JSX: those produce ordinary strings and lose the trusted marker.
+- `raw()` in an ordinary attribute does **not** bypass attribute escaping.
+- `__raw` and `__escape` remain available. Content order is children → `__raw` → `__escape`. Both retain zero in the new mode. Ordinary text no longer needs `__escape`.
+- `escapeHtml` remains a low-level string helper from `jtsx-loader/factory/jsxUtils.js`, also available as `_jsxUtils.escapeHtml` in injected templates. Feeding its output back into ordinary children escapes it again.
+
+Escaping is not a sanitizer, URL protocol validator, CSS validator or JavaScript serializer. Keep tag names, attribute names, event-handler strings and spread-prop structures trusted. Do not assume that `href="javascript:..."` becomes safe by escaping it.
+
+For trusted inline script/style source, explicitly use `raw()`. HTML escaping alone is not appropriate JavaScript serialization. For JSON data in a script element, neutralize HTML end tags before raw insertion:
 
 ```jsx
-<p __escape={userText}></p>
+import { raw } from 'jtsx-loader';
+
+const Data = ({ value }) => <script type="application/json">
+    {raw(JSON.stringify(value).replaceAll('<', '\u003c'))}
+</script>;
 ```
 
-Or import `escapeHtml` from `jtsx-loader/factory/jsxUtils.js` and explicitly escape a text value. The helper is also available as `_jsxUtils.escapeHtml` in an injected template.
+This example expects a JSON-serializable value and emits data, not executable JavaScript.
 
-With `escapeAttributes: true`, pass ordinary, unescaped values:
+## Components, arrays and async rendering
+
+Components are ordinary functions. Props are passed as data; they are escaped when serialized into a native tag. Components receive `children` as `[]`, one value or an array.
+
+The default factory is synchronous. Await nested async calls explicitly:
 
 ```jsx
-<a title={userText} href="/about">About</a>
+const Child = async () => <strong>Ready</strong>;
+export default async () => <main>{await Child()}</main>;
 ```
 
-Pre-escaping these attribute values would escape them twice. This setting does not validate URL protocols, sanitize HTML, or serialize JavaScript safely inside `script`. Avoid placing untrusted values into raw script strings.
+Arrays flatten recursively without implicit spaces; use `{' '}` where needed. Fragments add no wrapper. Null, undefined and boolean children are omitted; zero and bigint remain. Convert arbitrary objects explicitly, for example with `JSON.stringify`.
 
-Custom parsers return a **trusted HTML fragment**, so they must escape their own values:
-
-```js
-import { escapeHtml } from 'jtsx-loader/factory/jsxUtils.js';
-
-export default {
-    escapeAttributes: true,
-    attributeParser: {
-        ac: (attribute, value) =>
-            `data-${attribute.replaceAll(':', '-')}="${escapeHtml(value)}"`,
-    },
-};
-```
-
-Here the attribute name comes from template code. The callback's complete returned fragment is never escaped by the loader.
-
-## Async factory
-
-Select the async factory in your configuration:
+To await nested components and Promise children automatically:
 
 ```js
 // jtsx.config.js
 export default {
     injectFactory: true,
-    escapeAttributes: true,
     importFactory: "import { _jsx, _jsxFragment, _jsxUtils } from 'jtsx-loader/factory/asyncFactory.js';",
 };
 ```
-
-Nested async components can then use normal JSX:
 
 ```jsx
 const Child = async () => <strong>Ready</strong>;
@@ -148,39 +131,129 @@ export default () => <main><Child />{Promise.resolve(0)}</main>;
 ```
 
 ```js
-import Page from './Page.jsx';
-
 try {
-    console.log(await Page()); // <main><strong>Ready</strong>0</main>
+    const html = renderToString(await Page());
 } catch (error) {
-    // Includes rejected nested components and children.
+    // Includes nested component failures.
     console.error(error);
 }
 ```
 
-The async factory's `_jsx` and `_jsxFragment` return `Promise<string>`. They resolve nested arrays and Promises concurrently while preserving their source order. Null, undefined and boolean children are omitted; numbers (including zero) and bigint values remain. Unsupported object children reject: convert them to text explicitly.
+The async factory returns `Promise<Html>` in the new mode. Siblings resolve concurrently in source order. Attributes and `__raw`/`__escape` values are not automatically awaited; resolve those before passing them.
 
-Arrays and fragments join without implicit spaces; add text spaces in your template when required. After resolution, function components receive `children` as `[]`, one value, or an array. `__raw=0` and `__escape=0` produce `0`; null/undefined payloads are absent and other scalar payloads are stringified. Promises in attributes are not awaited.
+## Configuration and attributes
 
-## Run this repository's demo
+An optional `jtsx.config.js` is loaded from **process.cwd()**, not the template directory. See [the configuration example](jtsx.config.example.js).
+
+| Key | Default / behavior |
+| --- | --- |
+| `escapeChildren` | `true`; `false` restores raw string children and string results |
+| `escapeAttributes` | `true`; `false` restores unescaped ordinary attribute values |
+| `importFactory` | Imports `_jsx`, `_jsxFragment`, `_jsxUtils` from `factory/jsxFactory.js` |
+| `esbuildTransformConfig` | No custom options; properties override esbuild transform options |
+| `injectFactory` | `'legacy'`: inject when `esbuildTransformConfig` is falsy; `true`: always; `false`: manual imports |
+| `attributeParser` | `{}`; callbacks receive `(attribute, value)` by prefix |
+| `disableAttrWarnings` | `false`; `true` suppresses React-style name warnings |
+| `rewriteReactAttrs` | `false`; `true` rewrites React names; `className` always becomes `class` |
+
+When configuring `esbuildTransformConfig`, set `injectFactory: true` or import the factory manually. Do not combine a manual import of the same names with forced injection.
+
+```js
+export default {
+    injectFactory: true,
+    esbuildTransformConfig: { minify: true },
+};
+```
+
+A missing config is optional. A broken existing config warns and uses defaults. Set `JTSX_STRICT_CONFIG=1` outside the config to fail instead:
+
+```powershell
+$env:JTSX_STRICT_CONFIG = '1'
+node app.js
+```
+
+Configurations can execute in separate Node contexts; avoid side effects and do not assume one evaluation per process.
+
+Native HTML attribute names are preferred. `style` accepts a string or an object with native CSS names; `style={null}` is omitted. Attributes serialize `true` as `"true"`, omit `false`, serialize `null` as `"null"`, and render `undefined` as a bare attribute. Use strings for values such as `aria-expanded="false"`. Function-valued attributes are ignored with a warning; no browser listeners are installed.
+
+Custom parsers return a **trusted HTML fragment** and must escape values themselves:
+
+```js
+import { escapeHtml } from 'jtsx-loader/factory/jsxUtils.js';
+
+export default {
+    attributeParser: {
+        ac: (name, value) =>
+            `data-${name.replaceAll(':', '-')}="${escapeHtml(value)}"`,
+    },
+};
+```
+
+Attribute names in this example come from template code. The returned fragment is never escaped again by the loader.
+
+## HTTP and static output
+
+With the bootstrap above, `server.js` can use static template imports:
+
+```js
+import express from 'express';
+import Page from './Page.jsx';
+import { renderToString } from 'jtsx-loader/runtime.js';
+
+const app = express();
+app.get('/', async (req, res, next) => {
+    try {
+        res.type('html').send(renderToString(await Page({ title: 'Hello' })));
+    } catch (error) {
+        next(error);
+    }
+});
+app.listen(3000);
+```
+
+For Fastify: `reply.type('text/html').send(renderToString(await Page(props)))`. Handle render failures and complete 404/500 responses. Never send a JSX object directly to an HTTP framework, which may serialize it as JSON.
+
+For a file: `await writeFile('page.html', renderToString(await Page(props)))`. Add `<!doctype html>` when producing a full document. The [documentation examples](example/docs/examples) contain a bootstrap, Express server and standalone static generator.
+
+## Migration from 0.1.18
+
+1. Convert final JSX results with `renderToString()` before sending/writing them.
+2. Remove manual `escapeHtml()` around ordinary text/attributes to prevent double escaping.
+3. Wrap intentional HTML strings with `raw()`.
+4. Keep child JSX as objects during composition; avoid string concatenation and `.join()`.
+5. Account for recursive arrays, no implicit spaces, omitted booleans and preserved zero.
+
+For gradual migration, explicitly restore both old defaults:
+
+```js
+export default {
+    escapeChildren: false,
+    escapeAttributes: false,
+};
+```
+
+In this mode, send returned HTML strings directly as before. `renderToString()` intentionally treats a plain string as text and would escape the entire legacy page. The synchronous legacy factory retains its original whitespace, falsy payload and component-return behavior. The async factory returns `Promise<string>` when `escapeChildren: false`.
+
+**Совместимость:** это осознанное изменение defaults и типа результата. Старый режим сохранён настройками, но он не защищает пользовательский текст автоматически.
+
+## Documentation site and development
 
 ```sh
 npm install
 npm start
 npm run dev
-```
-
-Run either start or dev from the repository root. The demo listens on port 3001 (`PORT` overrides it). Routes are `/`, `/ru` and `/test`. Public assets are `/styles/*`, `/api/200.json` and `/api/401.json`; server code and templates are not served.
-
-The demo opts into attribute escaping. Requests normally write no files. To save rendered pages into `build/` under the working directory:
-
-```sh
 npm start -- --write-html
 ```
 
-Development uses nodemon to restart on changes to loader, factory, templates and configuration, including JSX/TSX. Consumers using nodemon should install it as a dev dependency and explicitly include `jsx,tsx` in its extensions; see [nodemon.json](nodemon.json). CSS is served from disk and needs a browser refresh.
+Open [English documentation](http://localhost:3001/) or [русскую документацию](http://localhost:3001/ru). The existing routes remain. The site includes navigation, content search, light/dark themes, code copying and server-side [Shiki highlighting](https://shiki.style/guide/install); no CDN or external API is needed to render pages. Shiki is a **dev dependency**, not part of the loader runtime.
 
-## Development checks
+Executable examples are shared by both languages. `npm start` registers hooks from code without `--import`; `npm run dev` restarts the process on changes. Requested pages are only saved to `build/` with `--write-html`.
+
+`?reload` creates fresh ESM identities for templates and dependencies. It does **not** unload modules or bound memory. Prefer process restarts during development and ordinary imports in production.
+
+JSX/TSX is transpiled, not type-checked. Ordinary `.ts` files are delegated to Node; support depends on the Node version. Complete JSX namespace/prop typings are not yet shipped. No routing, client reactivity, hydration or streaming is provided.
+
+## Verification
 
 ```sh
 npm test
@@ -188,20 +261,4 @@ npm run test:compat
 npm run test:package
 ```
 
-`npm test` includes isolated runtime, HTTP and real nodemon restart checks. On Windows the test runner must be allowed to start and stop its own process tree. Temporary fixtures are removed after checks.
-
-`test:package` separately runs a pack preview, creates a tarball and installs it into an independent temporary project. It checks public registration, both factories and installed esbuild without source links. It may need npm registry access.
-
-See the [changelog](CHANGELOG.md) for release history.
-
-Project development: [plan](PLAN.md), [compatibility contract](plans/COMPATIBILITY.md), [workflow](plans/WORKFLOW.md). Report issues on [GitHub](https://github.com/dergachevm/jtsx-loader/issues).
-
-## Important notes
-
-- TSX is transpiled, not type-checked. Only `.jsx` and `.tsx` are transformed; ordinary `.ts` imports are delegated to Node.js.
-- String children are raw HTML in both factories. Use `__escape` for untrusted text and enable `escapeAttributes` for ordinary attribute values; neither sanitizes HTML or validates URLs.
-- With the default factory, arrays and fragments insert spaces between their items, and falsy `__raw` / `__escape` payloads are omitted. Use `__escape={String(value)}` when a numeric value may be zero. Content is rendered in this order: children, `__raw`, `__escape`.
-- Ordinary attributes serialize `true` as `"true"`, omit `false`, serialize `null` as `"null"`, and render `undefined` as a bare attribute. `style={null}` is omitted. Function-valued attributes are ignored with a warning; browser event handlers are not installed.
-- Configuration may execute in both loader and application contexts. Avoid side effects and do not assume a single evaluation. A missing config is optional even with `JTSX_STRICT_CONFIG=1`.
-- Use `node --import jtsx-loader` for automatic Node.js hook selection. Direct registration of `jtsx-loader/loader/loader.mjs` uses the asynchronous API, which is deprecated in Node.js 26.
-- `?reload` creates new ESM module identities, including for dependencies, without unloading old modules. Use process restarts in development and ordinary imports in long-running servers.
+Compatibility tests explicitly use the legacy settings. New escaping tests cover both factories, nested components, raw fragments and registration without a CLI preload. The package check installs an actual tarball into an isolated project. Publication and deployment are separate actions.

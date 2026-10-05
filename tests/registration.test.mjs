@@ -8,7 +8,7 @@ test('public registration renders without deprecated API calls', t => {
         env: { NODE_OPTIONS: '--throw-deprecation' },
         config: `await Promise.resolve(); export default { injectFactory: true, escapeAttributes: true, esbuildTransformConfig: { minify: true } };`,
         files: { 'Page.tsx': `export default () => <p title={'"'}>ready</p>;` },
-        code: `import Page from './Page.tsx'; assert.equal(Page(), '<p title="&quot;">ready</p>');`,
+        code: `import Page from './Page.tsx'; assert.equal(String(Page()), '<p title="&quot;">ready</p>');`,
     });
     expectSuccess(result);
     assert.doesNotMatch(result.stderr, /DEP0205|DeprecationWarning/);
@@ -34,7 +34,7 @@ test('synchronous registration chains with other hooks and delegates CommonJS', 
                 }
             });
             const { default: Page } = await import('./Page.jsx');
-            assert.equal(Page(), '<p>42</p>');
+            assert.equal(String(Page()), '<p>42</p>');
             assert.ok(seen.some(url => url.endsWith('/Page.jsx')));
             hook.deregister();
         `,

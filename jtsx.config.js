@@ -1,7 +1,8 @@
 import { escapeHtml } from './factory/jsxUtils.js';
 
 export default {
-    // The demo opts in; the library keeps its legacy defaults.
+    // Explicit for clarity; the library now escapes by default too.
+    escapeChildren: true,
     escapeAttributes: true,
     importFactory: `import { _jsx, _jsxFragment, _jsxUtils } from '#@/factory/jsxFactory.js';`,
     attributeParser: {

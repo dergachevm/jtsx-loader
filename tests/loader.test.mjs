@@ -7,13 +7,13 @@ test('explicit injection works with transform options and explicit disable suppo
         expectSuccess(runFixture(t, {
             config: `export default { injectFactory: true, esbuildTransformConfig: ${options} };`,
             files: { 'Page.jsx': 'export default () => <><p>Hello</p></>;' },
-            code: `import Page from './Page.jsx'; assert.equal(Page(), '<p>Hello</p>');`,
+            code: `import Page from './Page.jsx'; assert.equal(String(Page()), '<p>Hello</p>');`,
         }));
     }
     expectSuccess(runFixture(t, {
         config: `export default { injectFactory: false };`,
         files: { 'Page.jsx': `import { _jsx } from 'jtsx-loader/factory/jsxFactory.js'; export default () => <p/>;` },
-        code: `import Page from './Page.jsx'; assert.equal(Page(), '<p></p>');`,
+        code: `import Page from './Page.jsx'; assert.equal(String(Page()), '<p></p>');`,
     }));
 });
 
@@ -24,7 +24,7 @@ test('query/hash and paths with spaces work for both JSX and TSX without merging
             code: `
                 const a = await import('./some folder/Page.${extension}#first');
                 const b = await import('./some folder/Page.${extension}?query=1#second');
-                assert.equal(a.default(), '<p></p>'); assert.equal(b.default(), '<p></p>');
+                assert.equal(String(a.default()), '<p></p>'); assert.equal(String(b.default()), '<p></p>');
                 assert.notEqual(a, b);
                 assert.equal(a, await import('./some folder/Page.${extension}#first'));
             `,
@@ -72,7 +72,7 @@ test('esbuild option errors do not invent positions in the user file', t => {
 test('missing config uses default factory from a consumer cwd', t => {
     expectSuccess(runFixture(t, {
         files: { 'Page.jsx': 'export default () => <p>Hello</p>;' },
-        code: `import Page from './Page.jsx'; assert.equal(Page(), '<p>Hello</p>');`,
+        code: `import Page from './Page.jsx'; assert.equal(String(Page()), '<p>Hello</p>');`,
     }));
 });
 
@@ -82,7 +82,7 @@ for (const register of [true, false]) {
             register, env: { JTSX_STRICT_CONFIG: '1' },
             config: `export default { rewriteReactAttrs: true, disableAttrWarnings: true };`,
             code: `import { _jsx } from 'jtsx-loader/factory/jsxFactory.js';
-                assert.equal(_jsx('label', { htmlFor: 'x' }), '<label for="x"></label>');`,
+                assert.equal(String(_jsx('label', { htmlFor: 'x' })), '<label for="x"></label>');`,
         }));
     });
 
@@ -96,7 +96,7 @@ for (const register of [true, false]) {
                 const result = runFixture(t, { register, config,
                     env: { JTSX_STRICT_CONFIG: strict ? '1' : '' },
                     code: `import { _jsx } from 'jtsx-loader/factory/jsxFactory.js';
-                        assert.equal(_jsx('label', { htmlFor: 'x' }), '<label htmlFor="x"></label>');`,
+                        assert.equal(String(_jsx('label', { htmlFor: 'x' })), '<label htmlFor="x"></label>');`,
                 });
                 if (strict) assert.notEqual(result.status, 0);
                 else expectSuccess(result);
@@ -108,7 +108,7 @@ for (const register of [true, false]) {
     }
     test(`missing config remains optional in strict mode (${register ? 'loader' : 'factory'})`, t => {
         const result = runFixture(t, { register, env: { JTSX_STRICT_CONFIG: '1' },
-            code: `import { _jsx } from 'jtsx-loader/factory/jsxFactory.js'; assert.equal(_jsx('p', null), '<p></p>');` });
+            code: `import { _jsx } from 'jtsx-loader/factory/jsxFactory.js'; assert.equal(String(_jsx('p', null)), '<p></p>');` });
         expectSuccess(result);
         assert.equal(result.stderr, '');
     });

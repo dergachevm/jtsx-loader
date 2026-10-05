@@ -1,7 +1,7 @@
 import test from 'node:test';
 import { runFixture, expectSuccess } from './helpers/fixture.mjs';
 
-const config = `export default { injectFactory: true, escapeAttributes: true,
+const config = `export default { escapeChildren: false, injectFactory: true, escapeAttributes: true,
     importFactory: ${JSON.stringify("import { _jsx, _jsxFragment, _jsxUtils } from 'jtsx-loader/factory/asyncFactory.js';")} };`;
 
 test('async factory resolves nested components and arrays in source order', t => {

@@ -1,5 +1,9 @@
 import test from 'node:test';
-import { runFixture, expectSuccess } from './helpers/fixture.mjs';
+import { runFixture as run, expectSuccess } from './helpers/fixture.mjs';
+
+const runFixture = (t, options) => run(t, { ...options, config: options.config
+    ? options.config.replace('export default {', 'export default { escapeChildren: false, escapeAttributes: false,')
+    : 'export default { escapeChildren: false, escapeAttributes: false };' });
 
 test('legacy attribute warning does not rewrite without opt-in', t => {
     expectSuccess(runFixture(t, { code: `

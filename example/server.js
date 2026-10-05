@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { renderToString } from 'jtsx-loader/runtime.js';
 
 const port = process.env.PORT || 3001;
 process.env.URL = process.env.URL || 'http://localhost:' + port;
@@ -11,6 +12,7 @@ const writeHTML = process.argv.includes('--write-html');
 
 // Only public assets are served; templates and server code stay private.
 app.use('/styles', express.static(path.join(exampleDirectory, 'styles')));
+app.use('/scripts', express.static(path.join(exampleDirectory, 'scripts')));
 for (const name of ['200.json', '401.json']) {
     app.get('/api/' + name, (req, res) => res.sendFile(path.join(exampleDirectory, 'api', name)));
 }
@@ -22,7 +24,7 @@ for (const [route, page] of pages) {
         try {
             // Development changes restart the process through nodemon.
             const Component = (await import('./pages/' + page + '.jsx')).default;
-            const rendered = await Component({ data: ++renderCount, title: 'Hello' });
+            const rendered = '<!doctype html>\n' + renderToString(await Component({ data: ++renderCount, title: 'Hello' }));
             if (writeHTML) {
                 const outputDirectory = path.resolve('build');
                 await mkdir(outputDirectory, { recursive: true });

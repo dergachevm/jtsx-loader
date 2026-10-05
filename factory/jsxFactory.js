@@ -1,13 +1,14 @@
 import possibleAttributes from './possibleAttributes.js';
 import { readConfig } from '../loader/config.mjs';
 import _jsxUtils, { escapeHtml } from './jsxUtils.js';
+import { raw, renderToString } from '../runtime.js';
 
-// WARN: сделать вставку html без аттрибута нельзя, потому что тогда нужно писать новый синтаксис для vscode
 const loadedConfig = await readConfig();
 
 let config = {
     attributeParser: {},
-    escapeAttributes: false,
+    escapeChildren: true,
+    escapeAttributes: true,
     ...loadedConfig
 };
 
@@ -73,9 +74,9 @@ const objectIntoAttrs = (object) => {
             return;
         }
 
-        // Custom parsers above own their HTML fragments. Only ordinary values
-        // are escaped here, and only for consumers opting into the new policy.
-        if (config.escapeAttributes === true && finalValue !== undefined) {
+        // Custom parsers above own their HTML fragments. Ordinary values are
+        // escaped by default; only an explicit false restores legacy output.
+        if (config.escapeAttributes !== false && finalValue !== undefined) {
             finalValue = escapeHtml(finalValue);
         }
 
@@ -111,17 +112,17 @@ const createTag = (tagName, attrs, children) => {
     ]
 
     tagArray.push(isVoidElt(tagName) ? '/>' : '>');
-    tagArray.push(...joinChildrens(children));
+    tagArray.push(...(config.escapeChildren === false ? joinChildrens(children) : [renderToString(children)]));
 
-    if (attrs?.__raw) { tagArray.push(attrs.__raw) }
+    if (config.escapeChildren === false ? attrs?.__raw : attrs?.__raw != null) { tagArray.push(attrs.__raw) }
 
-    if (attrs?.__escape) { tagArray.push(escapeHtml(attrs.__escape)) }
+    if (config.escapeChildren === false ? attrs?.__escape : attrs?.__escape != null) { tagArray.push(escapeHtml(attrs.__escape)) }
 
     !isVoidElt(tagName) && tagArray.push('</' + tagName + '>');
 
     const result = tagArray.join('');
 
-    return result;
+    return config.escapeChildren === false ? result : raw(result);
 }
 
 const _jsx = (tagName, attrs, ...children) => {
@@ -134,6 +135,7 @@ const _jsx = (tagName, attrs, ...children) => {
 }
 
 const _jsxFragment = ({ children, ...attrs }) => {
+    if (config.escapeChildren !== false) return raw(renderToString(children));
     if (children === null) return '';
     if (typeof children === 'object') {
         return children.join(' ');
@@ -142,4 +144,5 @@ const _jsxFragment = ({ children, ...attrs }) => {
     return children;
 }
 
-export { _jsx, _jsxFragment, _jsxUtils }
+const escapeChildren = config.escapeChildren !== false;
+export { _jsx, _jsxFragment, _jsxUtils, escapeChildren }
