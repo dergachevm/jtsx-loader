@@ -194,6 +194,8 @@ npm run test:package
 
 See the [changelog](CHANGELOG.md) for release history.
 
+Project development: [plan](PLAN.md), [compatibility contract](plans/COMPATIBILITY.md), [workflow](plans/WORKFLOW.md). Report issues on [GitHub](https://github.com/dergachevm/jtsx-loader/issues).
+
 ## Important notes
 
 - TSX is transpiled, not type-checked. Only `.jsx` and `.tsx` are transformed; ordinary `.ts` imports are delegated to Node.js.
