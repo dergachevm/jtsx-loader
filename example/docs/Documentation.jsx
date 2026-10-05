@@ -1,6 +1,7 @@
 import { raw } from 'jtsx-loader/runtime.js';
 import { sections } from './content.js';
 import { highlight } from './highlight.js';
+import Counter from './examples/Counter.jsx';
 
 const Code = ({ code, lang, file, copy }) => (
     <figure class="code-block">
@@ -37,13 +38,14 @@ export default ({ lang = 'ru' }) => {
                     name="description"
                     content={
                         ru
-                            ? 'JSX и TSX шаблоны для Node.js. Экранирование, raw(), регистрация без --import, SSR и статическая генерация.'
-                            : 'JSX and TSX templates for Node.js. Escaping, raw(), registration without --import, SSR and static generation.'
+                            ? 'JSX и TSX в Node.js без React. Общие компоненты и HTML-фабрика для фронтенда и бэкенда, SSR и статическая генерация.'
+                            : 'JSX and TSX in Node.js without React. Shared components and an HTML factory for frontend and backend, SSR and static generation.'
                     }
                 />
                 <title>{title}</title>
                 <link rel="stylesheet" href="/styles/styles.css" />
                 <script src="/scripts/docs.js" defer />
+                <script type="module" src="/scripts/client-demo.js" />
             </head>
             <body>
                 <a class="skip-link" href="#content">
@@ -98,7 +100,7 @@ export default ({ lang = 'ru' }) => {
                         </button>
                         <div class="sidebar-heading">
                             {ru ? 'РУКОВОДСТВО' : 'GUIDE'}
-                            <span>12</span>
+                            <span>{content.length}</span>
                         </div>
                         <label class="search-label" for="docs-search">
                             {ru
@@ -146,52 +148,54 @@ export default ({ lang = 'ru' }) => {
                     </aside>
                     <main id="content" tabindex="-1">
                         <div class="hero">
-                            <div class="eyebrow">NODE.JS · JSX · TSX</div>
+                            <div class="eyebrow">
+                                NODE.JS + BROWSER · JSX / TSX
+                            </div>
                             <h1>
                                 {ru ? (
                                     <>
-                                        Пишите JSX.
+                                        JSX и TSX.
                                         <br />
-                                        Получайте HTML.
+                                        Без React.
                                     </>
                                 ) : (
                                     <>
-                                        Write JSX.
+                                        JSX and TSX.
                                         <br />
-                                        Get HTML.
+                                        Without React.
                                     </>
                                 )}
                             </h1>
                             <p class="lead">
                                 {ru
-                                    ? 'Серверные шаблоны на обычных функциях. Текст экранируется автоматически. Разметка — под вашим контролем.'
-                                    : 'Server templates built with ordinary functions. Text is escaped automatically. Markup stays in your control.'}
+                                    ? 'Подключайте .jsx и .tsx прямо в Node.js и используйте те же компоненты в браузере. Одна HTML-фабрика для фронтенда и бэкенда.'
+                                    : 'Import .jsx and .tsx directly in Node.js and use the same components in the browser. One HTML factory for frontend and backend.'}
                             </p>
                             <div class="hero-actions">
                                 <a class="primary-link" href="#start">
                                     {ru ? 'Начать работу' : 'Get started'}{' '}
                                     <span>↗</span>
                                 </a>
-                                <a href="#migration">
-                                    {ru ? 'Что изменилось' : 'What changed'} →
+                                <a href="#browser">
+                                    {ru ? 'В браузере' : 'In the browser'} →
                                 </a>
                             </div>
                             <div class="feature-strip">
                                 <span>{ru ? 'Без React' : 'No React'}</span>
                                 <span>
                                     {ru
-                                        ? 'Один runtime-пакет: esbuild'
-                                        : 'One runtime dependency: esbuild'}
+                                        ? 'Общие компоненты'
+                                        : 'Shared components'}
                                 </span>
-                                <span>Node ≥20.16</span>
+                                <span>Node.js + Browser</span>
                             </div>
                         </div>
                         <div class="release-note">
                             <strong>Unreleased</strong>
                             <span>
                                 {ru
-                                    ? 'Эта версия меняет правила экранирования и тип результата. В npm 0.1.18 нового API ещё нет.'
-                                    : 'This version changes escaping and result types. npm 0.1.18 does not include the new API yet.'}
+                                    ? 'Документация рабочей версии. Новые примеры доступны из checkout или локального архива; в npm 0.1.18 их ещё нет.'
+                                    : 'Documentation for the working version. New examples are available from this checkout or a local tarball, ahead of npm 0.1.18.'}
                             </span>
                         </div>
                         <div id="sections">
@@ -246,6 +250,23 @@ export default ({ lang = 'ru' }) => {
                                                     ))}
                                                 </tbody>
                                             </table>
+                                        </div>
+                                    )}
+                                    {section.id === 'browser' && (
+                                        <div id="client-demo" data-lang={lang}>
+                                            <Counter
+                                                count={0}
+                                                label={
+                                                    ru
+                                                        ? 'Один компонент. Две среды.'
+                                                        : 'One component. Two environments.'
+                                                }
+                                                buttonLabel={
+                                                    ru
+                                                        ? 'Добавить один'
+                                                        : 'Add one'
+                                                }
+                                            />
                                         </div>
                                     )}
                                     {section.blocks.map((item) => (

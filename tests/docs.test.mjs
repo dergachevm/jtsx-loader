@@ -13,7 +13,7 @@ test('documentation examples run without a preload and generate escaped static H
             const html = await readFile('dist/index.html', 'utf8');
             assert.match(html, /^<!doctype html>/);
             assert.ok(html.includes('<h1>Hello</h1>'));
-            assert.ok(html.includes('<em>Trusted HTML</em>'));`,
+            assert.ok(html.includes('<output aria-live="polite">3</output>'));`,
     });
     expectSuccess(result);
     assert.match(result.stdout, /&lt;Hello&gt;/);
@@ -78,7 +78,7 @@ test('both documentation languages share complete sections and executable snippe
         ru.map((s) => s.id),
         en.map((s) => s.id),
     );
-    assert.equal(new Set(ru.map((s) => s.id)).size, 12);
+    assert.equal(new Set(ru.map((s) => s.id)).size, 13);
     for (const list of [ru, en]) {
         assert.ok(
             list.every(

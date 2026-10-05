@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Universal JSX without React
+
+- Make JSX/TSX imports in Node.js and shared frontend/backend components the main documentation focus. Move escaping to the API reference rather than presenting it as the product's headline.
+- Extract the existing HTML serializer into environment-independent `createFactory(options)`. Keep Node config loading in its adapter, preserving server and legacy behavior.
+- Add `jtsx-loader/browser.js` and `browserAsync.js` without Node filesystem/hooks, top-level await, React or Node polyfills. Route root and existing sync/async factory package imports through browser export conditions while retaining their Node adapters.
+- Document a complete esbuild client setup and explicit factory configuration. Add a live counter rendered from the same JSX component on the server and in the browser.
+
 ### Breaking: escaped output by default
 
 - Default `escapeChildren` and `escapeAttributes` to `true`. Ordinary text and attribute values are escaped; intentional HTML uses the new `raw(value)` helper. `raw()` is not an HTML sanitizer and does not bypass attribute escaping.

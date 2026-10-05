@@ -3,7 +3,18 @@
     "version": "0.1.18",
     "main": "./loader/register.mjs",
     "exports": {
-        ".": "./loader/register.mjs",
+        ".": {
+            "browser": "./browser.js",
+            "default": "./loader/register.mjs"
+        },
+        "./factory/jsxFactory.js": {
+            "browser": "./browser.js",
+            "default": "./factory/jsxFactory.js"
+        },
+        "./factory/asyncFactory.js": {
+            "browser": "./browserAsync.js",
+            "default": "./factory/asyncFactory.js"
+        },
         "./*": "./*"
     },
     "type": "module",
@@ -32,7 +43,7 @@
     ],
     "author": "Dergachev Mihail <dergachev.mihail@gmail.com>",
     "license": "MIT",
-    "description": "Loader for node.js that allows you to load JSX and TSX files and use it as functions",
+    "description": "JSX and TSX in Node.js without React, with a shared HTML factory for server and browser",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/dergachevm/jtsx-loader.git"

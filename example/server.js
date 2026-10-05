@@ -3,6 +3,7 @@ import path from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { renderToString } from 'jtsx-loader/runtime.js';
+import clientBundle from './docs/clientBundle.js';
 
 const port = process.env.PORT || 3001;
 process.env.URL = process.env.URL || 'http://localhost:' + port;
@@ -13,6 +14,7 @@ const writeHTML = process.argv.includes('--write-html');
 // Only public assets are served; templates and server code stay private.
 app.use('/styles', express.static(path.join(exampleDirectory, 'styles')));
 app.use('/scripts', express.static(path.join(exampleDirectory, 'scripts')));
+app.get('/scripts/client-demo.js', (req, res) => res.type('application/javascript').send(clientBundle));
 for (const name of ['200.json', '401.json']) {
     app.get('/api/' + name, (req, res) => res.sendFile(path.join(exampleDirectory, 'api', name)));
 }

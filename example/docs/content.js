@@ -4,6 +4,9 @@ import { readFileSync } from 'node:fs';
 export const examples = Object.fromEntries(
     [
         'Page.jsx',
+        'Counter.jsx',
+        'client.jsx',
+        'build-client.mjs',
         'data.jsx',
         'app.js',
         'bootstrap.js',
@@ -32,13 +35,13 @@ export function sections(lang) {
             id: 'start',
             title: t('Быстрый старт', 'Quick start'),
             intro: t(
-                'JSX как шаблонизатор для Node.js: компоненты на входе, HTML на выходе. Без React, hydration и клиентского runtime.',
-                'JSX templates for Node.js: components in, HTML out. No React, hydration or client runtime.',
+                'Подключайте JSX и TSX прямо в Node.js без React. Те же компоненты и HTML-фабрика работают в браузере.',
+                'Import JSX and TSX directly in Node.js without React. Use the same components and HTML factory in the browser.',
             ),
             paragraphs: [
                 t(
-                    'Нужны Node.js ≥20.16 и ESM ("type": "module" в package.json). Эта документация описывает Unreleased: raw(), renderToString() и новые defaults пока доступны только из checkout или локального архива.',
-                    'Requires Node.js ≥20.16 and ESM ("type": "module" in package.json). These docs describe Unreleased: raw(), renderToString() and the new defaults are available from this checkout or a local tarball only.',
+                    'Нужны Node.js ≥20.16 и ESM ("type": "module" в package.json). В Node.js loader подключает .jsx/.tsx через импорт и преобразует синтаксис с помощью esbuild. Для браузера компоненты собираются в обычный JavaScript. Эта документация описывает рабочую версию из checkout или локального архива.',
+                    'Requires Node.js ≥20.16 and ESM ("type": "module" in package.json). In Node.js, the loader handles .jsx/.tsx imports and transforms syntax with esbuild. For the browser, bundle components into ordinary JavaScript. These docs describe the working version from this checkout or a local tarball.',
                 ),
                 t(
                     'Для существующего опубликованного API: npm install jtsx-loader@0.1.18. Чтобы попробовать новый API, выполните npm pack в этом репозитории и установите созданный .tgz в свой проект. Номер архива пока остаётся 0.1.18; это локальная сборка, не новый npm-релиз.',
@@ -51,6 +54,7 @@ export function sections(lang) {
                     'bash',
                 ),
                 block('{\n  "type": "module"\n}', 'json', 'package.json'),
+                sample('Counter.jsx'),
                 sample('Page.jsx'),
                 sample('app.js'),
                 block('node app.js', 'bash'),
@@ -82,36 +86,51 @@ export function sections(lang) {
             ],
         },
         {
-            id: 'escaping',
-            title: t('Экранирование и raw()', 'Escaping & raw()'),
+            id: 'browser',
+            title: t('Фабрика в браузере', 'Factory in the browser'),
             intro: t(
-                'Строки — текст. raw(value) — явное разрешение на вставку HTML.',
-                'Strings are text. raw(value) explicitly permits HTML insertion.',
+                'Один JSX-компонент для фронтенда и бэкенда.',
+                'One JSX component for frontend and backend.',
             ),
             paragraphs: [
                 t(
-                    'По умолчанию текст и значения обычных атрибутов экранируются. JSX-результат хранит признак готовой разметки: вложенные компоненты не экранируются повторно. На границе HTTP, файла или лога вызывайте renderToString(await Page(props)). Не превращайте дочерний JSX в строку до вставки — признак разметки потеряется.',
-                    'Text and ordinary attribute values are escaped by default. JSX results retain their identity as rendered markup, so nested components are not escaped twice. Call renderToString(await Page(props)) at the HTTP, file or logging boundary. Converting child JSX to a string before insertion loses its markup identity.',
+                    'Counter.jsx из быстрого старта уже отрендерен на сервере прямо ниже. Клиентская сборка импортирует тот же файл и обновляет его в браузере. Нажмите кнопку: счётчик меняется без запроса к серверу и без React.',
+                    'Counter.jsx from the quick start is already server-rendered below. The client bundle imports the same file and updates it in the browser. Click the button: the counter changes without a server request or React.',
                 ),
                 t(
-                    'raw() возвращает неизменяемую обёртку и ничего не очищает. Используйте только доверенный или заранее очищенный HTML. В атрибуте raw() не отключает экранирование. __raw и __escape сохранены; __escape не нужно для обычного текста. Уже экранированные строки будут экранированы повторно.',
-                    'raw() returns an immutable wrapper and does not sanitize anything. Only use trusted or previously sanitized HTML. raw() does not bypass escaping in attributes. __raw and __escape remain supported; ordinary text no longer needs __escape. Pre-escaped strings are escaped again.',
+                    'Импортируйте фабрику из jtsx-loader/browser.js. Этот вход не читает Node-конфиг, не регистрирует loader hooks и не требует Node-полифиллов. Он экспортирует _jsx, _jsxFragment, _jsxUtils, raw, renderToString и createFactory(options). Корневой импорт также выбирает browser.js в сборщиках с поддержкой browser condition; явный путь удобен для предсказуемой настройки.',
+                    'Import the factory from jtsx-loader/browser.js. This entry does not read Node configuration, register loader hooks or require Node polyfills. It exports _jsx, _jsxFragment, _jsxUtils, raw, renderToString and createFactory(options). Root imports also select browser.js in bundlers supporting the browser condition; the explicit path makes configuration predictable.',
                 ),
                 t(
-                    'Экранирование не проверяет URL-протоколы, имена динамических тегов/атрибутов, CSS и строковые event handlers. Не передавайте недоверенные структуры props целиком. Для script/style нужна контекстная обработка: raw() допустим для доверенного исходного кода, но не делает вставку пользовательского JavaScript безопасной.',
-                    'Escaping does not validate URL protocols, dynamic tag/attribute names, CSS or string event handlers. Do not spread untrusted props wholesale. script/style need context-specific handling: raw() can insert trusted source code, but does not make user JavaScript safe.',
+                    'Соберите JSX/TSX заранее: браузер сам не понимает JSX-синтаксис. В esbuild задайте jsxFactory, jsxFragment и inject, как в примере. React и ReactDOM устанавливать не нужно. esbuild работает только при сборке, в клиентский bundle попадают компоненты и фабрика.',
+                    'Compile JSX/TSX ahead of time: browsers do not parse JSX syntax themselves. Set jsxFactory, jsxFragment and inject in esbuild as shown. No React or ReactDOM installation is needed. esbuild runs at build time; the client bundle contains your components and the factory.',
+                ),
+                t(
+                    'Фабрика возвращает HTML, а состояние, DOM и события контролирует ваш код. Пример использует innerHTML и делегированный addEventListener на стабильном контейнере. Это повторный рендер, а не hydration или virtual DOM: замена содержимого сбрасывает состояние вложенного DOM и фокус. Для сложных обновлений выбирайте нужную стратегию работы с DOM.',
+                    'The factory produces HTML; your code owns state, DOM and events. This example uses innerHTML and a delegated addEventListener on a stable container. It re-renders rather than hydrating or diffing a virtual DOM: replacing content resets nested DOM state and focus. Choose a suitable DOM update strategy for more complex updates.',
+                ),
+                t(
+                    'Общие компоненты должны использовать только данные и универсальные импорты. Вызовы node:fs оставляйте на сервере, а document/window — в клиентском entry. Настройки браузерной фабрики задаются через createFactory(options), не через jtsx.config.js. Async-компоненты можно вызывать с явным await; для автоматического ожидания вложенных компонентов используйте browserAsync.js как inject и renderToString(await Page()). Прежние пути factory/jsxFactory.js и factory/asyncFactory.js также выбирают клиентские адаптеры при browser condition.',
+                    'Shared components should use data and cross-platform imports only. Keep node:fs on the server and document/window in the client entry. Configure browser factories through createFactory(options), not jtsx.config.js. Await async component calls explicitly, or inject browserAsync.js for automatic nested resolution and use renderToString(await Page()). Existing factory/jsxFactory.js and factory/asyncFactory.js package imports also select client adapters under the browser condition.',
                 ),
             ],
             blocks: [
+                sample('client.jsx'),
+                sample('build-client.mjs'),
                 block(
-                    `import { raw } from 'jtsx-loader';\n\nconst text = '<b>Hello</b>';\nconst Text = () => <p>{text}</p>;\nconst Markup = () => <p>{raw(text)}</p>;`,
+                    'npm install --save-dev esbuild\nnode build-client.mjs',
+                    'bash',
                 ),
                 block(
-                    '<p>&lt;b&gt;Hello&lt;&#x2F;b&gt;</p>\n<p><b>Hello</b></p>',
+                    '<div id="client-demo" data-lang="en"></div>\n<script type="module" src="./dist/client.js"></script>',
                     'html',
-                    t('Результат', 'Result'),
+                    'index.html',
                 ),
-                sample('data.jsx'),
+                block(
+                    `import { createFactory } from 'jtsx-loader/browser.js';\nexport const { _jsx, _jsxFragment, _jsxUtils } = createFactory({\n    rewriteReactAttrs: true,\n});\n// Use this module as the bundler inject entry instead of browser.js.`,
+                    'javascript',
+                    'factory-config.js',
+                ),
             ],
         },
         {
@@ -415,6 +434,39 @@ export function sections(lang) {
                     'npm install\nnpm start\nnpm run dev\nnpm start -- --write-html',
                     'bash',
                 ),
+            ],
+        },
+        {
+            id: 'escaping',
+            title: t('Экранирование и raw()', 'Escaping & raw()'),
+            intro: t(
+                'Строки — текст. raw(value) — явное разрешение на вставку HTML.',
+                'Strings are text. raw(value) explicitly permits HTML insertion.',
+            ),
+            paragraphs: [
+                t(
+                    'По умолчанию текст и значения обычных атрибутов экранируются. JSX-результат хранит признак готовой разметки: вложенные компоненты не экранируются повторно. На границе HTTP, файла или лога вызывайте renderToString(await Page(props)). Не превращайте дочерний JSX в строку до вставки — признак разметки потеряется.',
+                    'Text and ordinary attribute values are escaped by default. JSX results retain their identity as rendered markup, so nested components are not escaped twice. Call renderToString(await Page(props)) at the HTTP, file or logging boundary. Converting child JSX to a string before insertion loses its markup identity.',
+                ),
+                t(
+                    'raw() возвращает неизменяемую обёртку и ничего не очищает. Используйте только доверенный или заранее очищенный HTML. В атрибуте raw() не отключает экранирование. __raw и __escape сохранены; __escape не нужно для обычного текста. Уже экранированные строки будут экранированы повторно.',
+                    'raw() returns an immutable wrapper and does not sanitize anything. Only use trusted or previously sanitized HTML. raw() does not bypass escaping in attributes. __raw and __escape remain supported; ordinary text no longer needs __escape. Pre-escaped strings are escaped again.',
+                ),
+                t(
+                    'Экранирование не проверяет URL-протоколы, имена динамических тегов/атрибутов, CSS и строковые event handlers. Не передавайте недоверенные структуры props целиком. Для script/style нужна контекстная обработка: raw() допустим для доверенного исходного кода, но не делает вставку пользовательского JavaScript безопасной.',
+                    'Escaping does not validate URL protocols, dynamic tag/attribute names, CSS or string event handlers. Do not spread untrusted props wholesale. script/style need context-specific handling: raw() can insert trusted source code, but does not make user JavaScript safe.',
+                ),
+            ],
+            blocks: [
+                block(
+                    `import { raw } from 'jtsx-loader';\n\nconst text = '<b>Hello</b>';\nconst Text = () => <p>{text}</p>;\nconst Markup = () => <p>{raw(text)}</p>;`,
+                ),
+                block(
+                    '<p>&lt;b&gt;Hello&lt;&#x2F;b&gt;</p>\n<p><b>Hello</b></p>',
+                    'html',
+                    t('Результат', 'Result'),
+                ),
+                sample('data.jsx'),
             ],
         },
         {

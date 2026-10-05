@@ -1,10 +1,10 @@
 # jtsx-loader
 
-JSX and TSX templates for Node.js. Render HTML with ordinary functions, without React, hydration or a browser runtime. Transpiled with esbuild.
+**JSX and TSX in Node.js — without React.** Import templates as modules, compose ordinary functions, and reuse the same HTML factory and components in the browser. One approach for frontend and backend: SSR, static pages and client-side rendering.
 
-> **Unreleased / breaking change.** This checkout escapes text and ordinary attribute values by default, adds `raw()` and returns trusted JSX objects. Published `0.1.18` does not contain these changes. The package version has not been bumped. See [migration](#migration-from-0118) before updating.
->
-> **Важно:** новый API ещё не опубликован. Готовую JSX-разметку преобразуйте в строку через `renderToString()` перед HTTP-ответом или записью в файл. Обычные строки теперь считаются текстом.
+The Node loader transforms JSX/TSX with esbuild when importing a template. For the browser, compile the same components into JavaScript with your bundler. Neither environment needs React or ReactDOM.
+
+> Documentation for the **Unreleased working version**. New APIs are available from this checkout or a local tarball, ahead of npm 0.1.18. See [migration](#migration-from-0118) when updating.
 
 ## Requirements and installation
 
@@ -30,14 +30,11 @@ The tarball still carries version `0.1.18`; it is a local preview, not a new pub
 Create `Page.jsx`:
 
 ```jsx
-import { raw } from 'jtsx-loader';
-
 const Badge = ({ children }) => <strong>{children}</strong>;
 
 export default ({ title }) => <main>
     <h1>{title}</h1>
     <Badge>Ready</Badge>
-    <p>{raw('<em>Trusted HTML</em>')}</p>
 </main>;
 ```
 
@@ -47,10 +44,10 @@ Create `app.js`:
 import { renderToString } from 'jtsx-loader';
 
 const { default: Page } = await import('./Page.jsx');
-console.log(renderToString(Page({ title: '<Hello>' })));
+console.log(renderToString(Page({ title: 'Hello JSX' })));
 ```
 
-Run `node app.js`. The heading contains literal `<Hello>` text, and the trusted fragment renders as an `em` element.
+Run `node app.js`. The template renders to HTML using ordinary functions; React is not involved.
 
 Importing the package root registers the loader and exports `raw` and `renderToString`. The registration must complete **before** importing templates. A static `import Page from './Page.jsx'` in the same entry file is linked too early, regardless of its position.
 
@@ -70,37 +67,76 @@ node --import jtsx-loader server.js
 
 `jtsx-loader/runtime.js` exports the helpers without registering hooks. Use this path in configuration and tools that only need serialization. Do not import the package root from `jtsx.config.js`: registration is waiting for that configuration and would create a loading cycle.
 
-## Escaping and trusted HTML
+## The same factory in the browser
+
+Use `jtsx-loader/browser.js` for client-side JSX/TSX. It contains the same HTML serializer as the Node factory, without filesystem access, hook registration or Node polyfills. It exports `_jsx`, `_jsxFragment`, `_jsxUtils`, `raw`, `renderToString` and `createFactory(options)`.
+
+Share a component between server and browser:
 
 ```jsx
-<p>{userText}</p>                 // Escaped text
-<div>{raw(trustedHtml)}</div>      // Explicit HTML insertion
-<p>{userText}{raw('<br>')}Next</p> // Mix text and HTML
-<a title={userText}>Link</a>       // Escaped attribute value
+// Counter.jsx — no React imports, no environment-specific code
+export default ({ count }) => <p>Count: {count}</p>;
 ```
-
-- Ordinary string children and attribute values are escaped by default. Pass original, unescaped data.
-- Native JSX tags and fragments produce immutable trusted HTML objects. Nested JSX keeps its identity and is not escaped again.
-- `raw(value)` creates a trusted HTML object. It does **not** sanitize HTML. Use only trusted or independently sanitized content. Null/undefined become empty HTML; zero becomes `0`. Await Promises before calling it.
-- `renderToString(value)` unwraps trusted HTML, escapes ordinary text, flattens arrays without separators and omits null/undefined/booleans. Numbers and bigint remain. Unsupported objects and unawaited Promises throw.
-- Call `renderToString(await Page(props))` once at the output boundary. Avoid `String(child)`, string interpolation or `.join()` while composing JSX: those produce ordinary strings and lose the trusted marker.
-- `raw()` in an ordinary attribute does **not** bypass attribute escaping.
-- `__raw` and `__escape` remain available. Content order is children → `__raw` → `__escape`. Both retain zero in the new mode. Ordinary text no longer needs `__escape`.
-- `escapeHtml` remains a low-level string helper from `jtsx-loader/factory/jsxUtils.js`, also available as `_jsxUtils.escapeHtml` in injected templates. Feeding its output back into ordinary children escapes it again.
-
-Escaping is not a sanitizer, URL protocol validator, CSS validator or JavaScript serializer. Keep tag names, attribute names, event-handler strings and spread-prop structures trusted. Do not assume that `href="javascript:..."` becomes safe by escaping it.
-
-For trusted inline script/style source, explicitly use `raw()`. HTML escaping alone is not appropriate JavaScript serialization. For JSON data in a script element, neutralize HTML end tags before raw insertion:
 
 ```jsx
-import { raw } from 'jtsx-loader';
+// client.jsx
+import { renderToString } from 'jtsx-loader/browser.js';
+import Counter from './Counter.jsx';
 
-const Data = ({ value }) => <script type="application/json">
-    {raw(JSON.stringify(value).replaceAll('<', '\u003c'))}
-</script>;
+const root = document.querySelector('#app');
+let count = 0;
+const render = () => { root.innerHTML = renderToString(<Counter count={count} />); };
+document.querySelector('#increment').addEventListener('click', () => {
+    count += 1;
+    render();
+});
+render();
 ```
 
-This example expects a JSON-serializable value and emits data, not executable JavaScript.
+Build the client entry with esbuild (`npm install --save-dev esbuild`):
+
+```js
+// build-client.mjs
+import { build } from 'esbuild';
+import { fileURLToPath } from 'node:url';
+
+await build({
+    entryPoints: ['client.jsx'],
+    bundle: true,
+    platform: 'browser',
+    format: 'esm',
+    target: 'es2020',
+    jsxFactory: '_jsx',
+    jsxFragment: '_jsxFragment',
+    inject: [fileURLToPath(import.meta.resolve('jtsx-loader/browser.js'))],
+    outfile: 'dist/client.js',
+});
+```
+
+Run `node build-client.mjs`, then serve your HTML and `dist/` over HTTP:
+
+```html
+<div id="app"></div>
+<button id="increment">Add one</button>
+<script type="module" src="./dist/client.js"></script>
+```
+
+In Node.js, import the same `Counter.jsx` after loader registration and call `renderToString(Counter({ count: 0 }))`. A [live client example](http://localhost:3001/ru#browser) and its [executable source](example/docs/examples/client.jsx) use the very same component for SSR and browser rendering.
+
+Browsers do not parse JSX/TSX directly: esbuild transforms it **at build time** and is not included in the client bundle. Bundlers honoring the `browser` export condition also resolve the package root to the browser entry. The explicit `/browser.js` path works without relying on that condition. A browser import by bare package name requires a bundler or import map; it is not a CDN URL.
+
+The factory generates HTML. Your code manages state, DOM insertion and events with normal browser APIs. It does not automatically hydrate, diff a virtual DOM or install JSX event handlers. Replacing `innerHTML` resets the replaced DOM and its focus; choose an appropriate DOM update strategy for larger interfaces. Shared components should keep Node-only and browser-only APIs in their respective entry files.
+
+For custom client options, create a small injection module:
+
+```js
+import { createFactory } from 'jtsx-loader/browser.js';
+export const { _jsx, _jsxFragment, _jsxUtils } = createFactory({ rewriteReactAttrs: true });
+```
+
+Point the bundler's `inject` to that module. The browser factory does not load `jtsx.config.js`. Await async component calls explicitly, or inject `jtsx-loader/browserAsync.js` to resolve nested async components automatically, then use `renderToString(await Page())`.
+
+The existing `jtsx-loader/factory/jsxFactory.js` and `jtsx-loader/factory/asyncFactory.js` imports also select browser adapters when your bundler honors the browser export condition. Avoid importing Node loader paths from client code.
 
 ## Components, arrays and async rendering
 
@@ -214,6 +250,38 @@ app.listen(3000);
 For Fastify: `reply.type('text/html').send(renderToString(await Page(props)))`. Handle render failures and complete 404/500 responses. Never send a JSX object directly to an HTTP framework, which may serialize it as JSON.
 
 For a file: `await writeFile('page.html', renderToString(await Page(props)))`. Add `<!doctype html>` when producing a full document. The [documentation examples](example/docs/examples) contain a bootstrap, Express server and standalone static generator.
+
+## Escaping and trusted HTML
+
+```jsx
+<p>{userText}</p>                 // Escaped text
+<div>{raw(trustedHtml)}</div>      // Explicit HTML insertion
+<p>{userText}{raw('<br>')}Next</p> // Mix text and HTML
+<a title={userText}>Link</a>       // Escaped attribute value
+```
+
+- Ordinary string children and attribute values are escaped by default. Pass original, unescaped data.
+- Native JSX tags and fragments produce immutable trusted HTML objects. Nested JSX keeps its identity and is not escaped again.
+- `raw(value)` creates a trusted HTML object. It does **not** sanitize HTML. Use only trusted or independently sanitized content. Null/undefined become empty HTML; zero becomes `0`. Await Promises before calling it.
+- `renderToString(value)` unwraps trusted HTML, escapes ordinary text, flattens arrays without separators and omits null/undefined/booleans. Numbers and bigint remain. Unsupported objects and unawaited Promises throw.
+- Call `renderToString(await Page(props))` once at the output boundary. Avoid `String(child)`, string interpolation or `.join()` while composing JSX: those produce ordinary strings and lose the trusted marker.
+- `raw()` in an ordinary attribute does **not** bypass attribute escaping.
+- `__raw` and `__escape` remain available. Content order is children → `__raw` → `__escape`. Both retain zero in the new mode. Ordinary text no longer needs `__escape`.
+- `escapeHtml` remains a low-level string helper from `jtsx-loader/factory/jsxUtils.js`, also available as `_jsxUtils.escapeHtml` in injected templates. Feeding its output back into ordinary children escapes it again.
+
+Escaping is not a sanitizer, URL protocol validator, CSS validator or JavaScript serializer. Keep tag names, attribute names, event-handler strings and spread-prop structures trusted. Do not assume that `href="javascript:..."` becomes safe by escaping it.
+
+For trusted inline script/style source, explicitly use `raw()`. HTML escaping alone is not appropriate JavaScript serialization. For JSON data in a script element, neutralize HTML end tags before raw insertion:
+
+```jsx
+import { raw } from 'jtsx-loader';
+
+const Data = ({ value }) => <script type="application/json">
+    {raw(JSON.stringify(value).replaceAll('<', '\u003c'))}
+</script>;
+```
+
+This example expects a JSON-serializable value and emits data, not executable JavaScript.
 
 ## Migration from 0.1.18
 

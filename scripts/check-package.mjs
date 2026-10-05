@@ -32,7 +32,8 @@ try {
         'loader/hooks.mjs', 'loader/sync-loader.mjs',
         'factory/jsxFactory.js', 'factory/asyncFactory.js', 'factory/jsxUtils.js',
         'factory/utils.js', 'factory/possibleAttributes.js', 'package.json',
-        'runtime.js', 'register.js',
+        'runtime.js', 'register.js', 'browser.js', 'browserAsync.js',
+        'factory/createFactory.js', 'factory/createAsyncFactory.js',
         'example/server.js', 'example/pages/index.jsx', 'example/pages/ru.jsx', 'example/pages/test.jsx',
         'jtsx.config.example.js', 'README.md', 'CHANGELOG.md',
     ]) assert.ok(files.has(file), `Missing package file: ${file}`);
@@ -72,6 +73,21 @@ try {
         const { default: Page } = await import('./Page.tsx');
         if (renderToString(Page({ title: '<x>' })) !== '<h1>&lt;x&gt;</h1>') throw new Error('direct registration failed');`);
     run(['direct.mjs']);
+    fixture.write('client.tsx', `import { raw, renderToString } from 'jtsx-loader';
+        globalThis.rendered = renderToString(<p>{'<x>'}{raw('<b>ok</b>')}</p>);`);
+    fixture.write('browser-check.mjs', `import assert from 'node:assert/strict';
+        import vm from 'node:vm'; import { build } from 'esbuild';
+        import { fileURLToPath } from 'node:url';
+        const result = await build({ entryPoints: ['client.tsx'], bundle: true, platform: 'browser', format: 'iife', target: 'es2020',
+            jsxFactory: '_jsx', jsxFragment: '_jsxFragment', inject: [fileURLToPath(import.meta.resolve('jtsx-loader/browser.js'))], write: false });
+        const context = vm.createContext({}); vm.runInContext(result.outputFiles[0].text, context);
+        assert.equal(context.rendered, '<p>&lt;x&gt;<b>ok</b></p>');`);
+    run(['browser-check.mjs']);
+    for (const name of ['Counter.jsx', 'client.jsx', 'build-client.mjs']) {
+        fixture.write(name, fs.readFileSync(path.join(fixture.root, 'node_modules/jtsx-loader/example/docs/examples', name), 'utf8'));
+    }
+    run(['build-client.mjs']);
+    assert.ok(fs.statSync(path.join(fixture.root, 'dist/client.js')).size > 0);
     fixture.write('jtsx.config.js', `export default {
         injectFactory: true, escapeAttributes: true,
         esbuildTransformConfig: { minify: true },
@@ -84,7 +100,7 @@ try {
     fixture.write('legacy.mjs', `import assert from 'node:assert/strict'; import { _jsx } from 'jtsx-loader/factory/jsxFactory.js';
         assert.equal(_jsx('p', null, '<b>old</b>'), '<p><b>old</b></p>');`);
     run(['--import', 'jtsx-loader', 'legacy.mjs']);
-    console.log('Installed tarball: escaping, raw, no-flag registration, async, legacy, TSX and deep paths passed');
+    console.log('Installed tarball: browser bundles and documented client build, Node registration, async, legacy and deep paths passed');
 } finally {
     for (const cleanup of cleanups) cleanup();
 }
