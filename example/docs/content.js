@@ -484,8 +484,12 @@ export function sections(lang) {
                             'These commands are for a clone of the jtsx-loader repository, not a project that installs the package. After npm install, run npm run dev and open http://localhost:3001/. The server restarts when source files change; refresh the browser separately. Use npm start to run without watching.',
                         ),
                         t(
-                            'Для сохранения HTML остановите сервер и запустите npm start -- --write-html. Затем откройте нужные страницы: их HTML запишется в build/. Это сохранение запрошенных страниц, а не обход всех маршрутов. Исходники JSX по HTTP не раздаются.',
-                            'To save HTML, stop the server and run npm start -- --write-html. Visit the pages you need: their HTML is written to build/. This saves requested pages rather than crawling every route. JSX sources are not served over HTTP.',
+                            'npm run build собирает весь сайт в build/: обе языковые страницы, стили, иконки и клиентский пример. Версия в документации берётся из package.json при сборке. Раздавайте build/ как корень сайта с поддержкой index.html в каталогах. npm start -- --write-html по-прежнему сохраняет только запрошенные страницы. Исходники JSX по HTTP не раздаются.',
+                            'npm run build generates the complete site in build/: both languages, styles, icons and the client example. The documentation version comes from package.json at build time. Serve build/ as the site root with directory index.html support. npm start -- --write-html still saves only requested pages. JSX sources are not served over HTTP.',
+                        ),
+                        t(
+                            'В репозитории пакета npm run patch увеличивает patch-версию, npm run bump — minor-версию; затем обе команды собирают сайт. Обновляются package.json и package-lock.json, публикация в npm и Git-коммит/тег не выполняются. При ошибке сборки версия остаётся обновлённой: исправьте ошибку и повторите npm run build.',
+                            'In the package repository, npm run patch increments the patch version and npm run bump increments the minor version; both then build the site. They update package.json and package-lock.json without publishing to npm or creating a Git commit/tag. If the build fails, the version remains updated: fix the error and retry npm run build.',
                         ),
                     ],
                     blocks: [block('npm install\nnpm run dev', 'bash')],
@@ -589,10 +593,10 @@ export function sections(lang) {
         },
         {
             id: 'migration',
-            title: t('Миграция с 0.1.18', 'Migration from 0.1.18'),
+            title: t('Миграция с 0.1.15–0.1.18', 'Migration from 0.1.15–0.1.18'),
             intro: t(
-                'Новые defaults меняют публичный контракт.',
-                'The new defaults change the public contract.',
+                'С 0.1.15 можно обновиться напрямую. Версии 0.1.16–0.1.18 сохраняли прежнее поведение; текущий API меняет экранирование по умолчанию и тип результата JSX. Ниже — шаги перехода и различия между этапами.',
+                'You can upgrade directly from 0.1.15. Versions 0.1.16–0.1.18 preserved existing behavior; the current API changes default escaping and the JSX result type. Follow the steps below, then review the changes at each stage.',
             ),
             steps: [
                 t(
@@ -600,8 +604,8 @@ export function sections(lang) {
                     'Replace direct HTTP/file output with renderToString(await Page(props)).',
                 ),
                 t(
-                    'Уберите ручной escapeHtml у обычных children и атрибутов.',
-                    'Remove manual escapeHtml calls for ordinary children and attributes.',
+                    'Уберите ручной escapeHtml у обычных children и атрибутов. В attributeParser сохраните экранирование: его результат вставляется как готовый фрагмент атрибутов.',
+                    'Remove manual escapeHtml calls for ordinary children and attributes. Keep escaping inside attributeParser: its output is inserted as a complete attribute fragment.',
                 ),
                 t(
                     'Замените намеренную HTML-строку в children на raw(html).',
@@ -618,21 +622,92 @@ export function sections(lang) {
             ],
             paragraphs: [
                 t(
-                    'Для поэтапного перехода включите оба старых defaults. Этот режим возвращает прежние строки, поэтому отдавайте результат напрямую, как раньше: renderToString считает обычную строку текстом. Отключать экранирование для новых проектов не рекомендуется.',
-                    'For gradual migration, enable both legacy defaults below. This mode returns the old strings, so send the result directly as before: renderToString treats a plain string as text. Disabling escaping is not recommended for new projects.',
+                    'Устанавливать каждую промежуточную версию не нужно. При переходе с 0.1.15 проверьте оба этапа ниже; при переходе с 0.1.18 начните с нового контракта рендера.',
+                    'Installing each intermediate version is unnecessary. From 0.1.15, review both stages below; from 0.1.18, start with the new rendering contract.',
                 ),
                 t(
                     'В этом обновлении сохранены прежние deep-import пути, регистрация через --import, конфигурация, async-фабрика и ?reload. Полный changelog находится в репозитории.',
                     'This update retains existing deep-import paths, --import registration, configuration, the async factory and ?reload. The complete changelog lives in the repository.',
                 ),
             ],
-            blocks: [
-                block(
-                    `export default {\n    escapeChildren: false,\n    escapeAttributes: false,\n};`,
-                    'javascript',
-                    'jtsx.config.js',
-                ),
+            topics: [
+                {
+                    id: 'since-0115',
+                    title: t('0.1.15 → 0.1.16–0.1.18: совместимые дополнения', '0.1.15 → 0.1.16–0.1.18: compatible additions'),
+                    paragraphs: [
+                        t(
+                            'Эти версии оставляли строки children и обычные атрибуты неэкранированными, а результат JSX — строкой. Ограничение Node.js изменилось с >=20.16 <25 на >=20.16: API регистрации выбирается автоматически. Команда node --import jtsx-loader app.js и прежние deep-import пути продолжают работать.',
+                            'These versions kept child strings and ordinary attributes unescaped, and JSX results as strings. Node.js support changed from >=20.16 <25 to >=20.16: the registration API is selected automatically. The node --import jtsx-loader app.js command and existing deep-import paths still work.',
+                        ),
+                        t(
+                            'Появился injectFactory: true | false | "legacy". Значение "legacy" сохраняет старое правило: фабрика внедряется только без esbuildTransformConfig. При настройке transform включите injectFactory: true либо оставьте ручной импорт фабрики; не сочетайте оба способа. escapeAttributes: true добавлен как опция, которая в 0.1.16–0.1.18 была выключена по умолчанию.',
+                            'injectFactory: true | false | "legacy" was added. "legacy" keeps the old rule: inject the factory only without esbuildTransformConfig. When configuring transform, set injectFactory: true or retain a manual factory import; do not combine both. escapeAttributes: true was added as an option, disabled by default in 0.1.16–0.1.18.',
+                        ),
+                        t(
+                            'Добавлена отдельная factory/asyncFactory.js, выбираемая через importFactory. Она ожидает вложенные компоненты, Promise и массивы, сохраняет порядок и 0, пропускает null/undefined/boolean и не добавляет пробелы. Обычная фабрика осталась синхронной: обновление само по себе не включает ожидание вложенных async-компонентов.',
+                            'A separate factory/asyncFactory.js was added, selected through importFactory. It awaits nested components, Promises and arrays, preserves order and 0, omits null/undefined/booleans and adds no spaces. The default factory remains synchronous: updating alone does not enable awaiting nested async components.',
+                        ),
+                        t(
+                            'Ошибочный существующий jtsx.config.js теперь вызывает предупреждение; внешняя переменная JTSX_STRICT_CONFIG=1 делает такую ошибку фатальной. Отсутствующий конфиг допустим. Исправлены обратные слеши в escapeHtml, null во фрагментах, style={null}, JSX/TSX-импорты с query/hash и позиции ошибок. Проверьте снимки HTML, если они зависели от этих ошибок.',
+                            'A broken existing jtsx.config.js now produces a warning; the external JTSX_STRICT_CONFIG=1 variable makes that failure fatal. Missing configuration is allowed. Fixes cover backslashes in escapeHtml, null fragments, style={null}, JSX/TSX imports with query/hash and error locations. Review HTML snapshots that depended on those bugs.',
+                        ),
+                    ],
+                    blocks: [sample('async.config.js')],
+                },
+                {
+                    id: 'rendering',
+                    title: t('После 0.1.18: новый контракт рендера', 'After 0.1.18: the new rendering contract'),
+                    paragraphs: [
+                        t(
+                            'escapeChildren и escapeAttributes теперь true по умолчанию. Нативные теги и фрагменты возвращают неизменяемый HTML-объект; async-фабрика — Promise<Html>. renderToString(await Page(props)) превращает результат в строку на границе HTTP/файла. Обычные строки он экранирует; Promise без await и произвольные объекты вызывают ошибку.',
+                            'escapeChildren and escapeAttributes now default to true. Native tags and fragments return immutable HTML objects; the async factory returns Promise<Html>. renderToString(await Page(props)) converts the result to a string at the HTTP/file boundary. It escapes plain strings and rejects unawaited Promises and unsupported objects.',
+                        ),
+                        t(
+                            'Массивы разворачиваются рекурсивно без неявных пробелов, null/undefined/boolean пропускаются, 0 и bigint сохраняются. Нужный пробел задавайте явно через {" "}. Оставляйте вложенный JSX объектом до финального рендера: join(), конкатенация и шаблонные строки теряют признак готовой разметки.',
+                            'Arrays flatten recursively without implicit spaces; null/undefined/booleans are omitted, while 0 and bigint remain. Insert required spaces explicitly with {" "}. Keep nested JSX as objects until final rendering: join(), concatenation and template strings lose markup identity.',
+                        ),
+                        t(
+                            'raw(html) предназначен для доверенного или заранее очищенного HTML и сам ничего не очищает. __raw и __escape сохранены; обычный текст больше не требует __escape. Примеры ниже — альтернативы для server.js, запущенного через node --import jtsx-loader server.js.',
+                            'raw(html) is for trusted or previously sanitized HTML and does not sanitize it. __raw and __escape remain supported; ordinary text no longer needs __escape. The examples below are alternatives for server.js started with node --import jtsx-loader server.js.',
+                        ),
+                    ],
+                    blocks: [
+                        block(`const Page = ({ html }) => <main>{html}</main>;\nres.type('html').send(await Page({ html: '<b>Hello</b>' }));`, 'jsx', t('Было: 0.1.15–0.1.18', 'Before: 0.1.15–0.1.18')),
+                        block(`import { raw, renderToString } from 'jtsx-loader';\nconst Page = ({ html }) => <main>{raw(html)}</main>;\nres.type('html').send(renderToString(await Page({ html: '<b>Hello</b>' })));`, 'jsx', t('Стало: текущий API', 'After: current API')),
+                    ],
+                },
+                {
+                    id: 'entry-points',
+                    title: t('Новые точки входа', 'New entry points'),
+                    paragraphs: [
+                        t(
+                            'Прежний --import сохранён. Теперь корневой импорт также экспортирует raw и renderToString; register.js позволяет зарегистрировать loader из JS перед динамическим импортом server.js. Для helpers без регистрации используйте runtime.js, особенно внутри jtsx.config.js, чтобы избежать цикла загрузки.',
+                            'The existing --import path remains supported. The root import now also exports raw and renderToString; register.js can register the loader from JavaScript before a dynamic server.js import. Use runtime.js for helpers without registration, especially inside jtsx.config.js to avoid a loading cycle.',
+                        ),
+                        t(
+                            'Для общих серверных и клиентских компонентов добавлены browser.js и browserAsync.js. Браузерный JSX собирается заранее; настройки передаются в createFactory(options), Node-конфиг там не читается. При поддержке browser condition сборщик также выбирает браузерные адаптеры для прежних factory/jsxFactory.js и factory/asyncFactory.js.',
+                            'browser.js and browserAsync.js support shared server/client components. Browser JSX must be bundled ahead of time; settings go through createFactory(options), not the Node configuration file. Bundlers supporting the browser condition also select browser adapters for the existing factory/jsxFactory.js and factory/asyncFactory.js paths.',
+                        ),
+                    ],
+                    blocks: [sample('bootstrap.js')],
+                },
+                {
+                    id: 'legacy',
+                    title: t('Поэтапный переход: старый режим', 'Gradual migration: legacy mode'),
+                    paragraphs: [
+                        t(
+                            'Добавьте настройки ниже в существующий jtsx.config.js, сохранив importFactory, attributeParser и остальные опции. Если в 0.1.16–0.1.18 уже включили escapeAttributes: true, оставьте его: для возврата строк достаточно escapeChildren: false.',
+                            'Merge the settings below into your existing jtsx.config.js, preserving importFactory, attributeParser and other options. If you already enabled escapeAttributes: true in 0.1.16–0.1.18, keep it: escapeChildren: false alone restores string output.',
+                        ),
+                        t(
+                            'В старом режиме отдавайте строки напрямую, без renderToString(): иначе разметка будет экранирована целиком. Синхронная фабрика сохраняет прежние пробелы и обработку falsy-значений; async-фабрика возвращает Promise<string>. Старый режим не защищает пользовательский текст автоматически; для новых проектов используйте новые defaults.',
+                            'In legacy mode, send strings directly without renderToString(), which would escape the entire page. The synchronous factory retains its old spacing and falsy-value behavior; the async factory returns Promise<string>. Legacy mode does not automatically protect user text; use the new defaults for new projects.',
+                        ),
+                    ],
+                    blocks: [block(`export default {\n    escapeChildren: false,\n    escapeAttributes: false,\n};`, 'javascript', 'jtsx.config.js')],
+                },
             ],
+            blocks: [],
         },
     ];
 }

@@ -27,7 +27,9 @@
         "test:package": "node scripts/check-package.mjs",
         "start": "node ./example/start.js",
         "dev": "nodemon ./example/start.js",
-        "patch": "npm version patch && npm publish"
+        "build": "node scripts/build-docs.mjs",
+        "bump": "npm version minor --no-git-tag-version && npm run build",
+        "patch": "npm version patch --no-git-tag-version && npm run build"
     },
     "engines": {
         "node": ">=20.16"

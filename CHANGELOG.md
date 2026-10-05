@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Expand the English/Russian migration guide and README to cover upgrades from 0.1.15, separating compatible 0.1.16–0.1.18 additions from the current rendering API changes.
+- Add `npm run build` for complete static documentation output. `npm run patch` and `npm run bump` update the patch/minor version in package files and build the site with that version from `package.json`, without publishing or creating Git commits/tags.
+
 - Use `npm install jtsx-loader` as the documented installation path. Include setup for a new project with `npm init -y` and ESM configuration, alongside installation in an existing project.
 - Present existing and new project setup as keyboard-accessible tabs in both documentation languages.
 - Render migration steps as a vertical numbered list, document native `class` usage and remove the highlighter credit from the documentation UI.

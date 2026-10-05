@@ -4,7 +4,7 @@
 
 The Node loader transforms JSX/TSX with esbuild when importing a template. For the browser, compile the same components into JavaScript with your bundler. Neither environment needs React or ReactDOM.
 
-Install from [npm](https://www.npmjs.com/package/jtsx-loader). See [migration](#migration-from-0118) when updating an existing project.
+Install from [npm](https://www.npmjs.com/package/jtsx-loader). See [migration](#migration-from-0115) when updating an existing project.
 
 ## Requirements and installation
 
@@ -294,13 +294,50 @@ const Data = ({ value }) => <script type="application/json">
 
 This example expects a JSON-serializable value and emits data, not executable JavaScript.
 
-## Migration from 0.1.18
+## Migration from 0.1.15
+
+You can update directly from 0.1.15; installing each intermediate version is unnecessary. There are two distinct API transitions:
+
+### 0.1.15 → 0.1.16–0.1.18
+
+These releases preserved raw string output and the synchronous factory by default. Existing `node --import jtsx-loader app.js`, deep imports, `jtsx.config.js`, and `?reload` remain supported.
+
+- Node.js support changed from `>=20.16 <25` to `>=20.16`. Registration selects the available Node hook API automatically; no launch-command change is required.
+- `injectFactory: 'legacy' | true | false` makes factory injection explicit. The default keeps the old rule: inject only without `esbuildTransformConfig`. If you set transform options, use `injectFactory: true` or keep your manual factory import; do not do both.
+- `escapeAttributes: true` was opt-in. String children and ordinary attributes were still raw by default; `attributeParser` callbacks still own escaping of the attribute fragments they return.
+- The optional `factory/asyncFactory.js` entry resolves nested async components, Promises and arrays, preserves order and zero, omits null/undefined/booleans and joins without implicit spaces. Select it through `importFactory`; the default factory does not automatically await nested children.
+- Broken existing configuration now emits a warning. Set the external environment variable `JTSX_STRICT_CONFIG=1` to fail instead of using defaults. Missing config is still allowed.
+- Fixes cover backslashes in `escapeHtml`, null fragments, `style={null}`, query/hash template imports and source locations in errors. Review snapshots that depended on those bugs.
+
+### Migration from 0.1.18
+
+The current API changes the defaults and JSX result type. These steps also apply when upgrading directly from **0.1.15**:
 
 1. Convert final JSX results with `renderToString()` before sending/writing them.
 2. Remove manual `escapeHtml()` around ordinary text/attributes to prevent double escaping.
 3. Wrap intentional HTML strings with `raw()`.
 4. Keep child JSX as objects during composition; avoid string concatenation and `.join()`.
 5. Account for recursive arrays, no implicit spaces, omitted booleans and preserved zero.
+
+Native tags and fragments now return immutable HTML objects instead of strings. The async factory returns `Promise<Html>`; await it before serialization. `renderToString()` escapes plain strings and rejects unresolved Promises and unsupported objects. Keep an explicit `{' '}` where a space is required.
+
+```jsx
+// 0.1.15–0.1.18: children are raw strings; native JSX returns a string.
+const Page = ({ html }) => <main>{html}</main>;
+res.type('html').send(await Page({ html: '<b>Hello</b>' }));
+```
+
+```jsx
+// Current API: mark intentional HTML and serialize at the HTTP boundary.
+// In server.js, start with node --import jtsx-loader server.js.
+import { raw, renderToString } from 'jtsx-loader';
+const Page = ({ html }) => <main>{raw(html)}</main>;
+res.type('html').send(renderToString(await Page({ html: '<b>Hello</b>' })));
+```
+
+The two snippets above are alternatives. `raw()` does not sanitize HTML. `__raw` and `__escape` remain supported; ordinary text no longer needs `__escape`. Custom `attributeParser` output still requires manual escaping.
+
+New entry points are additive: `register.js` registers from a JavaScript bootstrap before `await import('./server.js')`; `runtime.js` supplies `raw`/`renderToString` without registration (use it inside configuration). Browser components use `browser.js` or `browserAsync.js` with a bundler; configure them through `createFactory(options)` rather than the Node-only `jtsx.config.js`. Existing factory paths select browser adapters when the bundler honors the `browser` export condition.
 
 For gradual migration, explicitly restore both old defaults:
 
@@ -310,6 +347,8 @@ export default {
     escapeAttributes: false,
 };
 ```
+
+Merge these two settings into your existing `jtsx.config.js`, preserving `importFactory`, `attributeParser` and other options. If you already enabled `escapeAttributes: true` in 0.1.16–0.1.18, keep it enabled; only `escapeChildren: false` is needed to retain string output.
 
 In this mode, send returned HTML strings directly as before. `renderToString()` intentionally treats a plain string as text and would escape the entire legacy page. The synchronous legacy factory retains its original whitespace, falsy payload and component-return behavior. The async factory returns `Promise<string>` when `escapeChildren: false`.
 
@@ -321,12 +360,25 @@ In this mode, send returned HTML strings directly as before. `renderToString()` 
 npm install
 npm start
 npm run dev
+npm run build
 npm start -- --write-html
 ```
 
 Open [English documentation](http://localhost:3001/) or [русскую документацию](http://localhost:3001/ru). The existing routes remain. The site includes navigation, content search, light/dark themes, code copying and server-side syntax highlighting; no CDN or external API is needed to render pages. The highlighter is a development dependency, not part of the loader runtime.
 
-Executable examples are shared by both languages. `npm start` registers hooks from code without `--import`; `npm run dev` restarts the process on changes. Requested pages are only saved to `build/` with `--write-html`.
+Executable examples are shared by both languages. `npm start` registers hooks from code without `--import`; `npm run dev` restarts the process on changes. `npm start -- --write-html` saves individual requested pages to `build/`.
+
+### Build documentation and update the version
+
+| Command | Result |
+| --- | --- |
+| `npm run build` | Build the complete English/Russian documentation with the current package version |
+| `npm run patch` | Increment the patch version, then build (for example, `0.1.18` → `0.1.19`) |
+| `npm run bump` | Increment the minor version, then build (for example, `0.1.18` → `0.2.0`) |
+
+The version commands update both `package.json` and `package-lock.json` before building. Each build reads the version from `package.json` into both documentation pages. They do not create Git commits/tags or publish to npm. If compilation fails, the command exits with an error; the updated version remains in the package files, so fix the error and run `npm run build` without another increment.
+
+The static output is `build/index.html`, `build/ru/index.html`, styles/icons, the documentation script and the compiled browser demo. Serve `build/` as the site root with directory index support (`/` and `/ru/`); no running documentation Node server is needed. The loader package itself runs from its JavaScript sources and needs no separate compilation.
 
 ### Refresh templates in a running Node process
 

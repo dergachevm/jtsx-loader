@@ -1,7 +1,12 @@
-import { raw } from 'jtsx-loader/runtime.js';
+import { readFileSync } from 'node:fs';
+import { raw, renderToString } from 'jtsx-loader/runtime.js';
 import { sections } from './content.js';
 import { highlight } from './highlight.js';
 import Counter from './examples/Counter.jsx';
+import Page from './examples/Page.jsx';
+
+const { version } = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+const Icon = ({ name }) => <img class="icon" src={`/styles/icons/${name}.svg`} alt="" aria-hidden="true" width="16" height="16" />;
 
 const Code = ({ code, lang, file, copy }) => (
     <figure class="code-block">
@@ -12,12 +17,54 @@ const Code = ({ code, lang, file, copy }) => (
                 class="copy-code"
                 aria-label={`${copy}: ${file || lang}`}
             >
-                {copy}
+                <Icon name="copy" /><span data-copy-label>{copy}</span>
             </button>
         </figcaption>
         {raw(highlight(code, lang))}
     </figure>
 );
+
+const CodeTabs = ({ items, id, label, copy }) => (
+    <div class="code-tabs" data-tabs>
+        <div class="file-tabs" role="tablist" aria-label={label} hidden>
+            {items.map((item, i) => <button type="button" role="tab" id={`${id}-tab-${i}`} aria-controls={`${id}-panel-${i}`} aria-selected={String(i === 0)} tabindex={i === 0 ? 0 : -1}>{item.file}</button>)}
+        </div>
+        {items.map((item, i) => <div id={`${id}-panel-${i}`} role="tabpanel" aria-labelledby={`${id}-tab-${i}`} tabindex="0"><Code {...item} copy={copy} /></div>)}
+    </div>
+);
+
+const QuickStart = ({ section, ru, copy }) => {
+    const files = ['Page.jsx', 'Counter.jsx', 'app.js'].map((name) => section.blocks.find((item) => item.file === name));
+    return <>
+        <div class="breadcrumbs"><span>{ru ? 'Документация' : 'Documentation'}</span><span>/</span><span>{ru ? 'Начало работы' : 'Getting started'}</span></div>
+        <header class="article-header">
+            <h1 id="start-title">{section.title}</h1>
+            <p class="lead">{ru ? 'JSX и TSX в Node.js без React. Одна HTML-фабрика для сервера и браузера.' : 'JSX and TSX in Node.js without React. One HTML factory for server and browser.'}</p>
+            <p class="requirements">{ru ? 'Требования' : 'Requirements'}: Node.js ≥20.16 · ESM</p>
+        </header>
+        <div class="quick-step">
+            <h2 id="start-install"><span class="step-number">01</span>{ru ? 'Установка' : 'Installation'}</h2>
+            <div class="installation-options" data-tabs>
+                <div class="installation-tabs" role="tablist" aria-label={ru ? 'Вариант установки' : 'Setup option'} hidden>
+                    {section.installation.map((item, i) => <button type="button" role="tab" id={`install-tab-${i}`} aria-controls={`install-panel-${i}`} aria-selected={String(i === 0)} tabindex={i === 0 ? 0 : -1}>{item.file}</button>)}
+                </div>
+                {section.installation.map((item, i) => <div id={`install-panel-${i}`} role="tabpanel" aria-labelledby={`install-tab-${i}`} tabindex="0"><Code {...item} file={ru ? 'Терминал' : 'Terminal'} copy={copy} /></div>)}
+            </div>
+        </div>
+        <div class="quick-step">
+            <h2 id="start-component"><span class="step-number">02</span>{ru ? 'Первый компонент' : 'Your first component'}</h2>
+            <p>{ru ? 'Создайте Page.jsx, Counter.jsx и app.js в одной папке.' : 'Create Page.jsx, Counter.jsx and app.js in the same directory.'}</p>
+            <CodeTabs items={files} id="start-files" label={ru ? 'Файлы примера' : 'Example files'} copy={copy} />
+            <div id="start-result" class="output-preview" data-toc-label={ru ? 'Результат' : 'Result'}><Code code={renderToString(Page({ title: 'Hello JSX' }))} lang="html" file="HTML" copy={copy} /></div>
+        </div>
+        <div class="quick-step">
+            <h2 id="start-run"><span class="step-number">03</span>{ru ? 'Запуск' : 'Run'}</h2>
+            <Code code="node app.js" lang="bash" file={ru ? 'Терминал' : 'Terminal'} copy={copy} />
+            <p>{ru ? 'HTML появится в терминале. Чтобы открыть страницу в браузере, подключите ' : 'HTML appears in your terminal. To serve the page in a browser, connect '}<a href="#servers">Express {ru ? 'или' : 'or'} Fastify</a>.</p>
+            <p class="technical-note">{section.paragraphs[0]}</p>
+        </div>
+    </>;
+};
 
 export default ({ lang = 'ru' }) => {
     const ru = lang === 'ru';
@@ -80,7 +127,7 @@ export default ({ lang = 'ru' }) => {
                                 ru ? 'Переключить тему' : 'Toggle theme'
                             }
                         >
-                            {ru ? 'Тема' : 'Theme'}
+                            <Icon name="sun" /><span class="sr-only" data-theme-label>{ru ? 'Тема' : 'Theme'}</span>
                         </button>
                     </nav>
                 </header>
@@ -96,18 +143,14 @@ export default ({ lang = 'ru' }) => {
                             {ru
                                 ? 'Разделы документации'
                                 : 'Documentation sections'}{' '}
-                            <span>⌄</span>
+                            <Icon name="chevron-down" />
                         </button>
-                        <div class="sidebar-heading">
-                            {ru ? 'РУКОВОДСТВО' : 'GUIDE'}
-                            <span>{content.length}</span>
-                        </div>
-                        <label class="search-label" for="docs-search">
+                        <label class="sr-only" for="docs-search">
                             {ru
                                 ? 'Поиск по документации'
                                 : 'Search documentation'}
                         </label>
-                        <input
+                        <div class="search-box"><Icon name="search" /><input
                             id="docs-search"
                             type="search"
                             placeholder={
@@ -115,7 +158,9 @@ export default ({ lang = 'ru' }) => {
                             }
                             autocomplete="off"
                             hidden
-                        />
+                        /><kbd>/</kbd></div>
+                        <div class="sidebar-heading">{ru ? 'РУКОВОДСТВО' : 'GUIDE'}</div>
+                        <div class="sidebar-scroll">
                         <nav
                             id="section-nav"
                             aria-label={
@@ -129,67 +174,21 @@ export default ({ lang = 'ru' }) => {
                                     <span class="section-number">
                                         {String(index + 1).padStart(2, '0')}
                                     </span>
-                                    {section.title}
+                                    {section.id === 'development' ? (ru ? 'Диагностика' : 'Development') : section.title}
                                 </a>
                             ))}
                         </nav>
                         <p id="search-empty" role="status" hidden>
                             {ru ? 'Ничего не найдено' : 'No matching sections'}
                         </p>
+                        </div>
                         <div class="sidebar-note">
-                            <span class="status-dot" />
-                            npm
-                            <p>
-                                {ru
-                                    ? 'Установка: npm install jtsx-loader'
-                                    : 'Install: npm install jtsx-loader'}
-                            </p>
+                            <div class="package-meta"><a href="https://www.npmjs.com/package/jtsx-loader" target="_blank" rel="noopener noreferrer">jtsx-loader</a><span class="package-version">v{version}</span></div>
+                            <button type="button" class="install-copy" data-copy-command="npm install jtsx-loader" aria-label={ru ? 'Скопировать команду установки' : 'Copy install command'}><code>npm install jtsx-loader</code><Icon name="copy" /></button>
+                            <p class="install-feedback" data-copy-label aria-live="polite" />
                         </div>
                     </aside>
                     <main id="content" tabindex="-1">
-                        <div class="hero">
-                            <div class="eyebrow">
-                                NODE.JS + BROWSER · JSX / TSX
-                            </div>
-                            <h1>
-                                {ru ? (
-                                    <>
-                                        JSX и TSX.
-                                        <br />
-                                        Без React.
-                                    </>
-                                ) : (
-                                    <>
-                                        JSX and TSX.
-                                        <br />
-                                        Without React.
-                                    </>
-                                )}
-                            </h1>
-                            <p class="lead">
-                                {ru
-                                    ? 'Подключайте .jsx и .tsx прямо в Node.js и используйте те же компоненты в браузере. Одна HTML-фабрика для фронтенда и бэкенда.'
-                                    : 'Import .jsx and .tsx directly in Node.js and use the same components in the browser. One HTML factory for frontend and backend.'}
-                            </p>
-                            <div class="hero-actions">
-                                <a class="primary-link" href="#start">
-                                    {ru ? 'Начать работу' : 'Get started'}{' '}
-                                    <span>↗</span>
-                                </a>
-                                <a href="#browser">
-                                    {ru ? 'В браузере' : 'In the browser'} →
-                                </a>
-                            </div>
-                            <div class="feature-strip">
-                                <span>{ru ? 'Без React' : 'No React'}</span>
-                                <span>
-                                    {ru
-                                        ? 'Общие компоненты'
-                                        : 'Shared components'}
-                                </span>
-                                <span>Node.js + Browser</span>
-                            </div>
-                        </div>
                         <div id="sections">
                             {content.map((section, index) => (
                                 <section
@@ -197,6 +196,7 @@ export default ({ lang = 'ru' }) => {
                                     class="doc-section"
                                     aria-labelledby={`${section.id}-title`}
                                 >
+                                    {section.id === 'start' ? <QuickStart section={section} ru={ru} copy={copy} /> : <>
                                     <div class="section-kicker">
                                         {String(index + 1).padStart(2, '0')} /{' '}
                                         {String(content.length).padStart(
@@ -218,39 +218,6 @@ export default ({ lang = 'ru' }) => {
                                     {section.paragraphs.map((text) => (
                                         <p>{text}</p>
                                     ))}
-                                    {section.installation && (
-                                        <div class="installation-options">
-                                            <div
-                                                class="installation-tabs"
-                                                role="tablist"
-                                                aria-label={ru ? 'Вариант установки' : 'Setup option'}
-                                                hidden
-                                            >
-                                                {section.installation.map((item, i) => (
-                                                    <button
-                                                        type="button"
-                                                        role="tab"
-                                                        id={`install-tab-${i}`}
-                                                        aria-controls={`install-panel-${i}`}
-                                                        aria-selected={String(i === 0)}
-                                                        tabindex={i === 0 ? 0 : -1}
-                                                    >
-                                                        {item.file}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            {section.installation.map((item, i) => (
-                                                <div
-                                                    id={`install-panel-${i}`}
-                                                    role="tabpanel"
-                                                    aria-labelledby={`install-tab-${i}`}
-                                                    tabindex="0"
-                                                >
-                                                    <Code {...item} copy={copy} />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
                                     {section.topics?.map((topic) => (
                                         <div class="doc-topic">
                                             <h3 id={`${section.id}-${topic.id}`}>
@@ -312,6 +279,7 @@ export default ({ lang = 'ru' }) => {
                                     {section.blocks.map((item) => (
                                         <Code {...item} copy={copy} />
                                     ))}
+                                    </>}
                                 </section>
                             ))}
                         </div>
@@ -325,6 +293,15 @@ export default ({ lang = 'ru' }) => {
                             </a>
                         </footer>
                     </main>
+                    <aside class="page-outline" aria-label={ru ? 'На этой странице' : 'On this page'}>
+                        <div class="outline-heading">{ru ? 'НА ЭТОЙ СТРАНИЦЕ' : 'ON THIS PAGE'}</div>
+                        <nav id="page-toc">
+                            <a href="#start-install" aria-current="location">{ru ? 'Установка' : 'Installation'}</a>
+                            <a href="#start-component">{ru ? 'Первый компонент' : 'Your first component'}</a>
+                            <a href="#start-run">{ru ? 'Запуск' : 'Run'}</a>
+                            <a href="#start-result">{ru ? 'Результат' : 'Result'}</a>
+                        </nav>
+                    </aside>
                 </div>
                 <div
                     id="copy-status"

@@ -3,7 +3,7 @@ const theme = document.querySelector('#theme-toggle');
 const setTheme = (value) => {
     document.documentElement.dataset.theme = value;
     theme.setAttribute('aria-pressed', String(value === 'dark'));
-    theme.textContent =
+    const label =
         value === 'dark'
             ? ru
                 ? 'Светлая тема'
@@ -11,6 +11,10 @@ const setTheme = (value) => {
             : ru
               ? 'Тёмная тема'
               : 'Dark theme';
+    theme.querySelector('[data-theme-label]').textContent = label;
+    theme.setAttribute('aria-label', label);
+    theme.title = label;
+    theme.querySelector('.icon').src = '/styles/icons/' + (value === 'dark' ? 'sun' : 'moon') + '.svg';
 };
 let saved;
 try {
@@ -33,7 +37,7 @@ theme.addEventListener('click', () => {
     } catch {}
 });
 
-for (const options of document.querySelectorAll('.installation-options')) {
+for (const options of document.querySelectorAll('[data-tabs]')) {
     const tablist = options.querySelector('[role="tablist"]');
     const tabs = [...tablist.querySelectorAll('[role="tab"]')];
     const panels = [...options.querySelectorAll('[role="tabpanel"]')];
@@ -59,6 +63,7 @@ for (const options of document.querySelectorAll('.installation-options')) {
         });
     });
     select(0);
+    options.dataset.enhanced = 'true';
     tablist.hidden = false;
 }
 
@@ -90,45 +95,104 @@ search.addEventListener('input', () => {
     document.querySelector('#search-empty').hidden = matches > 0;
 });
 
-const observer = new IntersectionObserver(
-    (entries) => {
-        const entry = entries.find((item) => item.isIntersecting);
-        if (!entry) return;
-        for (const link of links) {
-            if (link.hash === '#' + entry.target.id)
-                link.setAttribute('aria-current', 'location');
+// The article may be taller than a viewport: use its start positions so the
+// active section stays stable through long code examples and reverse scrolling.
+const toc = document.querySelector('#page-toc');
+let activeSection;
+let headings = [];
+const updateLocation = () => {
+    const current = sections.findLast((section) => section.getBoundingClientRect().top <= 110) || sections[0];
+    if (current !== activeSection) {
+        activeSection = current;
+        links.forEach((link) => {
+            if (link.hash === '#' + current.id) link.setAttribute('aria-current', 'location');
             else link.removeAttribute('aria-current');
-        }
-    },
-    { rootMargin: '-15% 0px -70% 0px' },
-);
-sections.forEach((section) => observer.observe(section));
+        });
+        headings = [...current.querySelectorAll('h2[id], h3[id], [data-toc-label]')].filter((heading) => heading.id !== current.id + '-title');
+        if (!headings.length) headings = [current.querySelector('[id$="-title"]')];
+        toc.replaceChildren(...headings.map((heading) => {
+            const link = document.createElement('a');
+            link.href = '#' + heading.id;
+            link.textContent = heading.dataset.tocLabel || heading.textContent.replace(/^\d{2}(?=\D)/, '').trim();
+            return link;
+        }));
+    }
+    const currentHeading = headings.findLast((heading) => heading.getBoundingClientRect().top <= 120) || headings[0];
+    for (const link of toc.querySelectorAll('a')) {
+        if (link.hash === '#' + currentHeading.id) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+    }
+};
+let locationQueued = false;
+const queueLocation = () => {
+    if (locationQueued) return;
+    locationQueued = true;
+    requestAnimationFrame(() => {
+        locationQueued = false;
+        updateLocation();
+    });
+};
+window.addEventListener('scroll', queueLocation, { passive: true });
+window.addEventListener('resize', queueLocation);
+window.addEventListener('hashchange', queueLocation);
+window.addEventListener('load', queueLocation);
+updateLocation();
 
-for (const button of document.querySelectorAll('.copy-code')) {
+// A plain slash is a shortcut only outside editable controls.
+document.addEventListener('keydown', (event) => {
+    if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey ||
+        event.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+    event.preventDefault();
+    search.focus();
+});
+
+async function copyText(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        // Support local/plain HTTP previews where the Clipboard API is absent.
+        const field = document.createElement('textarea');
+        field.value = text;
+        field.className = 'sr-only';
+        field.setAttribute('readonly', '');
+        const focused = document.activeElement;
+        document.body.append(field);
+        field.select();
+        let copied = false;
+        try { copied = document.execCommand('copy'); } catch {}
+        field.remove();
+        focused?.focus({ preventScroll: true });
+        return copied;
+    }
+}
+
+for (const button of document.querySelectorAll('.copy-code, [data-copy-command]')) {
+    const command = button.dataset.copyCommand;
+    const container = command ? button.closest('.sidebar-note') : button.closest('.code-block');
+    const label = container.querySelector('[data-copy-label]');
+    const original = label.textContent;
+    let resetTimer;
     button.addEventListener('click', async () => {
-        const text = button
-            .closest('.code-block')
-            .querySelector('code').textContent;
-        try {
-            await navigator.clipboard.writeText(text);
-            button.textContent = ru ? 'Скопировано' : 'Copied';
-            document.querySelector('#copy-status').textContent = ru
-                ? 'Код скопирован'
-                : 'Code copied';
-        } catch {
-            // Still let the user select and copy code on non-secure HTTP origins.
+        clearTimeout(resetTimer);
+        const code = container.querySelector('code');
+        const success = await copyText(command || code.textContent);
+        container.dataset.copied = String(success);
+        if (success) {
+            label.textContent = ru ? 'Скопировано' : 'Copied';
+        } else {
             const range = document.createRange();
-            range.selectNodeContents(
-                button.closest('.code-block').querySelector('code'),
-            );
+            range.selectNodeContents(code);
             getSelection().removeAllRanges();
             getSelection().addRange(range);
-            button.textContent = ru ? 'Нажмите Ctrl/Cmd+C' : 'Press Ctrl/Cmd+C';
-            document.querySelector('#copy-status').textContent =
-                button.textContent;
+            label.textContent = ru ? 'Нажмите Ctrl/Cmd+C' : 'Press Ctrl/Cmd+C';
         }
-        setTimeout(() => {
-            button.textContent = ru ? 'Копировать' : 'Copy';
+        document.querySelector('#copy-status').textContent = success
+            ? (ru ? 'Код скопирован в буфер обмена' : 'Code copied to clipboard')
+            : label.textContent;
+        resetTimer = setTimeout(() => {
+            label.textContent = original;
+            delete container.dataset.copied;
         }, 2400);
     });
 }
