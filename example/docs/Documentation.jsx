@@ -213,6 +213,39 @@ export default ({ lang = 'ru' }) => {
                                     {section.paragraphs.map((text) => (
                                         <p>{text}</p>
                                     ))}
+                                    {section.installation && (
+                                        <div class="installation-options">
+                                            <div
+                                                class="installation-tabs"
+                                                role="tablist"
+                                                aria-label={ru ? 'Вариант установки' : 'Setup option'}
+                                                hidden
+                                            >
+                                                {section.installation.map((item, i) => (
+                                                    <button
+                                                        type="button"
+                                                        role="tab"
+                                                        id={`install-tab-${i}`}
+                                                        aria-controls={`install-panel-${i}`}
+                                                        aria-selected={String(i === 0)}
+                                                        tabindex={i === 0 ? 0 : -1}
+                                                    >
+                                                        {item.file}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {section.installation.map((item, i) => (
+                                                <div
+                                                    id={`install-panel-${i}`}
+                                                    role="tabpanel"
+                                                    aria-labelledby={`install-tab-${i}`}
+                                                    tabindex="0"
+                                                >
+                                                    <Code {...item} copy={copy} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                     {section.rows && (
                                         <div class="table-scroll">
                                             <table>

@@ -33,6 +33,35 @@ theme.addEventListener('click', () => {
     } catch {}
 });
 
+for (const options of document.querySelectorAll('.installation-options')) {
+    const tablist = options.querySelector('[role="tablist"]');
+    const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+    const panels = [...options.querySelectorAll('[role="tabpanel"]')];
+    const select = (index, focus = false) => {
+        tabs.forEach((tab, i) => {
+            tab.setAttribute('aria-selected', String(i === index));
+            tab.tabIndex = i === index ? 0 : -1;
+            panels[i].hidden = i !== index;
+        });
+        if (focus) tabs[index].focus();
+    };
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => select(index));
+        tab.addEventListener('keydown', (event) => {
+            let next;
+            if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+            else if (event.key === 'ArrowLeft') next = (index - 1 + tabs.length) % tabs.length;
+            else if (event.key === 'Home') next = 0;
+            else if (event.key === 'End') next = tabs.length - 1;
+            else return;
+            event.preventDefault();
+            select(next, true);
+        });
+    });
+    select(0);
+    tablist.hidden = false;
+}
+
 const search = document.querySelector('#docs-search');
 const links = [...document.querySelectorAll('#section-nav a')];
 const sections = [...document.querySelectorAll('.doc-section')];

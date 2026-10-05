@@ -44,21 +44,23 @@ export function sections(lang) {
                     'Requires Node.js ≥20.16 and ESM ("type": "module" in package.json). In Node.js, the loader handles .jsx/.tsx imports and transforms syntax with esbuild. For the browser, bundle components into ordinary JavaScript.',
                 ),
                 t(
-                    'Если проект уже есть, установите пакет из npm и включите ESM. Если проекта ещё нет, выберите вариант «Новый проект»: создайте папку, выполните npm init -y и установите пакет. Это альтернативные варианты — выберите один, затем создайте файлы примера в папке проекта.',
-                    'If you already have a project, install the package from npm and enable ESM. Otherwise, use the “New project” option: create a directory, run npm init -y and install the package. Choose one of these alternatives, then create the example files in your project directory.',
+                    'Выберите вариант установки, затем создайте файлы примера в папке проекта.',
+                    'Choose a setup option, then create the example files in your project directory.',
                 ),
             ],
-            blocks: [
+            installation: [
                 block(
                     'npm install jtsx-loader\nnpm pkg set type=module',
                     'bash',
-                    t('Существующий проект', 'Existing project'),
+                    t('Проект уже есть', 'Existing project'),
                 ),
                 block(
                     'mkdir my-jtsx-app\ncd my-jtsx-app\nnpm init -y\nnpm pkg set type=module\nnpm install jtsx-loader',
                     'bash',
-                    t('Новый проект', 'New project'),
+                    t('Создать проект', 'New project'),
                 ),
+            ],
+            blocks: [
                 sample('Counter.jsx'),
                 sample('Page.jsx'),
                 sample('app.js'),

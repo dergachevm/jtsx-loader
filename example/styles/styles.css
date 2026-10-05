@@ -337,6 +337,40 @@ h2 a:hover:after {
     overflow-wrap: anywhere;
     margin: 15px 0;
 }
+.installation-options {
+    margin: 22px 0;
+}
+.installation-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--soft);
+    width: fit-content;
+    max-width: 100%;
+}
+.installation-tabs [role='tab'] {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 9px 14px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+    min-height: 44px;
+}
+.installation-tabs [role='tab'][aria-selected='true'] {
+    background: var(--panel);
+    border-color: var(--line);
+    color: var(--accent);
+}
+.installation-tabs [role='tab']:hover {
+    color: var(--accent);
+}
+.installation-options .code-block {
+    margin: 12px 0 0;
+}
 .code-block {
     margin: 22px 0;
     border: 1px solid var(--line);
