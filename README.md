@@ -130,7 +130,7 @@ Run `node build-client.mjs`, then serve your HTML and `dist/` over HTTP:
 <script type="module" src="./dist/client.js"></script>
 ```
 
-In Node.js, import the same `Counter.jsx` after loader registration and call `renderToString(Counter({ count: 0 }))`. A [live client example](http://localhost:3001/ru#browser) and its [executable source](example/docs/examples/client.jsx) use the very same component for SSR and browser rendering.
+In Node.js, import the same `Counter.jsx` after loader registration and call `renderToString(Counter({ count: 0 }))`.
 
 Browsers do not parse JSX/TSX directly: esbuild transforms it **at build time** and is not included in the client bundle. Bundlers honoring the `browser` export condition also resolve the package root to the browser entry. The explicit `/browser.js` path works without relying on that condition. A browser import by bare package name requires a bundler or import map; it is not a CDN URL.
 
@@ -260,7 +260,7 @@ app.listen(3000);
 
 For Fastify: `reply.type('text/html').send(renderToString(await Page(props)))`. Handle render failures and complete 404/500 responses. Never send a JSX object directly to an HTTP framework, which may serialize it as JSON.
 
-For a file: `await writeFile('page.html', renderToString(await Page(props)))`. Add `<!doctype html>` when producing a full document. The [documentation examples](example/docs/examples) contain a bootstrap, Express server and standalone static generator.
+For a file: `await writeFile('page.html', renderToString(await Page(props)))`. Add `<!doctype html>` when producing a full document.
 
 ## Escaping and trusted HTML
 
@@ -354,33 +354,7 @@ In this mode, send returned HTML strings directly as before. `renderToString()` 
 
 **Совместимость:** это осознанное изменение defaults и типа результата. Старый режим сохранён настройками, но он не защищает пользовательский текст автоматически.
 
-## Documentation site and development
-
-```sh
-npm install
-npm start
-npm run dev
-npm run build
-npm start -- --write-html
-```
-
-Open [English documentation](http://localhost:3001/) or [русскую документацию](http://localhost:3001/ru). The existing routes remain. The site includes navigation, content search, light/dark themes, code copying and server-side syntax highlighting; no CDN or external API is needed to render pages. The highlighter is a development dependency, not part of the loader runtime.
-
-Executable examples are shared by both languages. `npm start` registers hooks from code without `--import`; `npm run dev` restarts the process on changes. `npm start -- --write-html` saves individual requested pages to `build/`.
-
-### Build documentation and update the version
-
-| Command | Result |
-| --- | --- |
-| `npm run build` | Build the complete English/Russian documentation with the current package version |
-| `npm run patch` | Increment the patch version, then build (for example, `0.1.18` → `0.1.19`) |
-| `npm run bump` | Increment the minor version, then build (for example, `0.1.18` → `0.2.0`) |
-
-The version commands update both `package.json` and `package-lock.json` before building. Each build reads the version from `package.json` into both documentation pages. They do not create Git commits/tags or publish to npm. If compilation fails, the command exits with an error; the updated version remains in the package files, so fix the error and run `npm run build` without another increment.
-
-The static output is `build/index.html`, `build/ru/index.html`, styles/icons, the documentation script and the compiled browser demo. Serve `build/` as the site root with directory index support (`/` and `/ru/`); no running documentation Node server is needed. The loader package itself runs from its JavaScript sources and needs no separate compilation.
-
-### Refresh templates in a running Node process
+## Refresh templates in a running Node process
 
 Node caches imported modules. Editing a JSX file or refreshing a browser tab does not update modules already loaded by the server. To read an edited template without restarting Node, append `?reload` **to the path inside a dynamic import**:
 
@@ -395,8 +369,6 @@ export async function renderPage(props) {
 
 The actual file remains `Page.jsx`. This is not a CLI flag or a browser URL parameter. Use `?reload` without a value. Each call to `renderPage` obtains a fresh template and its ESM dependencies, including nested JSX/TSX components and JS modules. Child imports need no extra parameter. Reusing an old `Page` variable keeps calling the old component.
 
-For a runnable example, save [reload.js](example/docs/examples/reload.js) and [dev-server.js](example/docs/examples/dev-server.js) beside `Page.jsx` and `Counter.jsx` from the documentation quick start. Run `node dev-server.js`, open `http://localhost:3000/`, edit `Counter.jsx`, then refresh the page. The updated component renders without restarting the server.
-
 `?reload` does not watch files, refresh the browser automatically or clear CommonJS `require.cache`. It creates new ESM instances without unloading old ones, and dependency initialization may run again. Use it for development, restart during long sessions, and use ordinary imports in production. Restart Node after changing `jtsx.config.js`.
 
 Alternatively, restart your existing server when files change:
@@ -406,7 +378,7 @@ npm install --save-dev nodemon
 npx nodemon --watch . --ext js,mjs,cjs,json,jsx,tsx --ignore dist/ --ignore build/ bootstrap.js
 ```
 
-This uses the Express `bootstrap.js` example and needs no `?reload`. Refresh the browser after the server restarts. The repository's `npm run dev` script runs the documentation site; installing the package does not add that script to your project.
+This uses the Express `bootstrap.js` example and needs no `?reload`. Refresh the browser after the server restarts.
 
 JSX/TSX is transpiled, not type-checked. Ordinary `.ts` files are delegated to Node; support depends on the Node version. Complete JSX namespace/prop typings are not yet shipped. No routing, client reactivity, hydration or streaming is provided.
 
@@ -418,4 +390,4 @@ npm run test:compat
 npm run test:package
 ```
 
-Compatibility tests explicitly use the legacy settings. New escaping tests cover both factories, nested components, raw fragments and registration without a CLI preload. The package check installs an actual tarball into an isolated project. Publication and deployment are separate actions.
+Compatibility tests explicitly use the legacy settings. New escaping tests cover both factories, nested components, raw fragments and registration without a CLI preload. The package check installs an actual tarball into an isolated project. Publication is a separate action.

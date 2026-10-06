@@ -18,18 +18,12 @@
         "./*": "./*"
     },
     "type": "module",
-    "imports": {
-        "#@/*": "./*"
-    },
     "scripts": {
         "test": "node --test",
         "test:compat": "node --test tests/compat.test.mjs",
         "test:package": "node scripts/check-package.mjs",
-        "start": "node ./example/start.js",
-        "dev": "nodemon ./example/start.js",
-        "build": "node scripts/build-docs.mjs",
-        "bump": "npm version minor --no-git-tag-version && npm run build",
-        "patch": "npm version patch --no-git-tag-version && npm run build"
+        "bump": "npm version minor --no-git-tag-version",
+        "patch": "npm version patch --no-git-tag-version"
     },
     "engines": {
         "node": ">=20.16"
@@ -53,10 +47,15 @@
     "dependencies": {
         "esbuild": "^0.28.1"
     },
-    "devDependencies": {
-        "express": "^5.2.1",
-        "htmlfy": "^1.0.2",
-        "nodemon": "^3.1.14",
-        "shiki": "4.5.0"
-    }
+    "files": [
+        "loader/",
+        "factory/",
+        "browser.js",
+        "browserAsync.js",
+        "register.js",
+        "runtime.js",
+        "jtsx.config.example.js",
+        "README.md",
+        "CHANGELOG.md"
+    ]
 }

@@ -1,9 +1,0 @@
-{
-    "ignore": [
-        ".git",
-        "node_modules/**/node_modules"
-    ],
-    "watch": ["./loader", "./factory", "./example", "./jtsx.config.js", "./package.json"],
-    "ext": "js,mjs,cjs,json,jsx,tsx",
-    "quiet": false
-}

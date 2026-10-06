@@ -2,20 +2,14 @@
 
 ## Unreleased
 
-- Expand the English/Russian migration guide and README to cover upgrades from 0.1.15, separating compatible 0.1.16–0.1.18 additions from the current rendering API changes.
-- Add `npm run build` for complete static documentation output. `npm run patch` and `npm run bump` update the patch/minor version in package files and build the site with that version from `package.json`, without publishing or creating Git commits/tags.
+- Expand the README migration guide to cover upgrades from 0.1.15, separating compatible 0.1.16–0.1.18 additions from the current rendering API changes.
 
 - Use `npm install jtsx-loader` as the documented installation path. Include setup for a new project with `npm init -y` and ESM configuration, alongside installation in an existing project.
-- Present existing and new project setup as keyboard-accessible tabs in both documentation languages.
-- Render migration steps as a vertical numbered list, document native `class` usage and remove the highlighter credit from the documentation UI.
-- Explain where to use `?reload`, add a runnable development server and nested-component refresh example, expand troubleshooting, and clarify setup and output for the main documentation examples.
 
 ### Universal JSX without React
 
-- Make JSX/TSX imports in Node.js and shared frontend/backend components the main documentation focus. Move escaping to the API reference rather than presenting it as the product's headline.
 - Extract the existing HTML serializer into environment-independent `createFactory(options)`. Keep Node config loading in its adapter, preserving server and legacy behavior.
 - Add `jtsx-loader/browser.js` and `browserAsync.js` without Node filesystem/hooks, top-level await, React or Node polyfills. Route root and existing sync/async factory package imports through browser export conditions while retaining their Node adapters.
-- Document a complete esbuild client setup and explicit factory configuration. Add a live counter rendered from the same JSX component on the server and in the browser.
 
 ### Breaking: escaped output by default
 
@@ -30,14 +24,10 @@
 - Export `raw` and `renderToString` from the package root; add side-effect-free `runtime.js` for configuration and serialization tools.
 - Add `register.js` for a source bootstrap: `import 'jtsx-loader/register.js'; await import('./server.js')`. Root imports also register the loader. The `--import jtsx-loader` path remains supported; registration is idempotent within a realm.
 - Enable package self-imports with a root export and a wildcard preserving existing deep paths.
-- Start the documentation demo from JavaScript without a CLI preload.
 
 ### Documentation
 
 - Rewrite README and configuration examples for safe defaults, raw HTML, output boundaries, source registration, async rendering and migration from 0.1.18.
-- Replace outdated English/Russian demo pages with a shared 12-section documentation site on the existing `/` and `/ru` routes. Add responsive navigation, content search, light/dark themes, accessible controls and code copying.
-- Add server-side Shiki syntax highlighting for JSX/TSX, JS/TS, JSON, HTML, CSS, Bash and PowerShell, with a plain-text fallback. Shiki is development-only; the runtime still depends only on esbuild.
-- Share executable examples across translations; test source preservation, JSON script escaping, no-flag startup and static generation.
 
 ## 0.1.18 — 2026-10-05
 
@@ -69,14 +59,6 @@
 - `escapeAttributes: true` for ordinary attribute values. The default is false. Custom parser fragments and string children remain raw; callbacks must escape values themselves.
 - External `JTSX_STRICT_CONFIG=1` to reject a broken existing config instead of using defaults.
 - `factory/asyncFactory.js`, selected through `importFactory`. It resolves nested components/arrays/Promises, preserves order and zero, omits null/undefined/boolean children and propagates nested failures to the outer await. It joins without implicit spaces. The original factory remains synchronous.
-
-### Demo and verification
-
-- Restrict static serving to styles and selected JSON files; use explicit page routes and completed 404/500 responses without exposing render error details.
-- Use process restarts in development instead of an unconditional `?reload` import. Watch loader/factory/config and JSX/TSX changes.
-- Write generated HTML only with `--write-html`.
-- Opt the demo into attribute escaping and show explicit escaping of fetched text.
-- Add regression/compatibility tests, HTTP and development-restart checks, plus an independent tarball installation check.
 
 ### Compatibility limits
 

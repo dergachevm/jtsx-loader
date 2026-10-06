@@ -34,9 +34,11 @@ try {
         'factory/utils.js', 'factory/possibleAttributes.js', 'package.json',
         'runtime.js', 'register.js', 'browser.js', 'browserAsync.js',
         'factory/createFactory.js', 'factory/createAsyncFactory.js',
-        'example/server.js', 'example/pages/index.jsx', 'example/pages/ru.jsx', 'example/pages/test.jsx',
         'jtsx.config.example.js', 'README.md', 'CHANGELOG.md',
     ]) assert.ok(files.has(file), `Missing package file: ${file}`);
+    for (const file of files) {
+        assert.ok(/^(loader\/|factory\/|browser(?:Async)?\.js$|register\.js$|runtime\.js$|jtsx\.config\.example\.js$|package\.json$|README\.md$|CHANGELOG\.md$)/.test(file), `Unexpected package file: ${file}`);
+    }
     console.log(`pack --dry-run: ${preview.files.length} files; required paths present`);
     const [packed] = JSON.parse(npm(['pack', '--ignore-scripts', '--json', '--pack-destination', fixture.root], repository));
     const archive = path.join(fixture.root, packed.filename);
@@ -83,11 +85,6 @@ try {
         const context = vm.createContext({}); vm.runInContext(result.outputFiles[0].text, context);
         assert.equal(context.rendered, '<p>&lt;x&gt;<b>ok</b></p>');`);
     run(['browser-check.mjs']);
-    for (const name of ['Counter.jsx', 'client.jsx', 'build-client.mjs']) {
-        fixture.write(name, fs.readFileSync(path.join(fixture.root, 'node_modules/jtsx-loader/example/docs/examples', name), 'utf8'));
-    }
-    run(['build-client.mjs']);
-    assert.ok(fs.statSync(path.join(fixture.root, 'dist/client.js')).size > 0);
     fixture.write('jtsx.config.js', `export default {
         injectFactory: true, escapeAttributes: true,
         esbuildTransformConfig: { minify: true },
@@ -100,7 +97,7 @@ try {
     fixture.write('legacy.mjs', `import assert from 'node:assert/strict'; import { _jsx } from 'jtsx-loader/factory/jsxFactory.js';
         assert.equal(_jsx('p', null, '<b>old</b>'), '<p><b>old</b></p>');`);
     run(['--import', 'jtsx-loader', 'legacy.mjs']);
-    console.log('Installed tarball: browser bundles and documented client build, Node registration, async, legacy and deep paths passed');
+    console.log('Installed tarball: browser bundles, Node registration, async, legacy and deep paths passed');
 } finally {
     for (const cleanup of cleanups) cleanup();
 }
