@@ -45,7 +45,7 @@
         "url": "git+https://github.com/dergachevm/jtsx-loader.git"
     },
     "dependencies": {
-        "esbuild": "^0.28.1"
+        "esbuild": "^0.28.2"
     },
     "files": [
         "loader/",
