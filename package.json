@@ -1,5 +1,6 @@
 {
     "name": "jtsx-loader",
+    "homepage": "https://jtsx.ancros.dev/",
     "version": "0.2.1",
     "main": "./loader/register.mjs",
     "exports": {
